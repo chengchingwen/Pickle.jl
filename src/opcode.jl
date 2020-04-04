@@ -109,7 +109,7 @@ function genops(io::IO, yield_end_pos=false)
     Channel() do chn
         while !eof(io)
             pos = position(io)
-            code = read(io, 1)[]
+            code = read(io, UInt8)
             opcode = maybe_opcode(code)
             isnothing(opcode) &&
                 error("at position $pos, code $code unknown.")

@@ -625,6 +625,80 @@ Docs.getdoc(::Val{BINPERSID}) = """Push an object identified by a persistent ID.
       ID is passed to self.persistent_load(), and whatever object that
       returns is pushed on the stack.  See PERSID for more detail.
       """
+"""
+    argument(::OpCode)
+
+return the argument reader of an OpCode.
+"""
+argument(op::OpCode) = argument(Val(op))
+argument(::Val{INT}) = read_decimalnl_short
+argument(::Val{BININT}) = read_int4
+argument(::Val{BININT1}) = read_uint1
+argument(::Val{BININT2}) = read_uint2
+argument(::Val{LONG}) = read_decimalnl_long
+argument(::Val{LONG1}) = read_long1
+argument(::Val{LONG4}) = read_long4
+argument(::Val{STRING}) = read_stringnl
+argument(::Val{BINSTRING}) = read_string4
+argument(::Val{SHORT_BINSTRING}) = read_string1
+argument(::Val{BINBYTES}) = read_bytes4
+argument(::Val{SHORT_BINBYTES}) = read_bytes1
+argument(::Val{BINBYTES8}) = read_bytes8
+argument(::Val{BYTEARRAY8}) = read_bytearray8
+argument(::Val{NEXT_BUFFER}) = nothing
+argument(::Val{READONLY_BUFFER}) = nothing
+argument(::Val{NONE}) = nothing
+argument(::Val{NEWTRUE}) = nothing
+argument(::Val{NEWFALSE}) = nothing
+argument(::Val{UNICODE}) = read_unicodestringnl
+argument(::Val{SHORT_BINUNICODE}) = read_unicodestring1
+argument(::Val{BINUNICODE}) = read_unicodestring4
+argument(::Val{BINUNICODE8}) = read_unicodestring8
+argument(::Val{FLOAT}) = read_floatnl
+argument(::Val{BINFLOAT}) = read_float8
+argument(::Val{EMPTY_LIST}) = nothing
+argument(::Val{APPEND}) = nothing
+argument(::Val{APPENDS}) = nothing
+argument(::Val{LIST}) = nothing
+argument(::Val{EMPTY_TUPLE}) = nothing
+argument(::Val{TUPLE}) = nothing
+argument(::Val{TUPLE1}) = nothing
+argument(::Val{TUPLE2}) = nothing
+argument(::Val{TUPLE3}) = nothing
+argument(::Val{EMPTY_DICT}) = nothing
+argument(::Val{DICT}) = nothing
+argument(::Val{SETITEM}) = nothing
+argument(::Val{SETITEMS}) = nothing
+argument(::Val{EMPTY_SET}) = nothing
+argument(::Val{ADDITEMS}) = nothing
+argument(::Val{FROZENSET}) = nothing
+argument(::Val{POP}) = nothing
+argument(::Val{DUP}) = nothing
+argument(::Val{MARK}) = nothing
+argument(::Val{POP_MARK}) = nothing
+argument(::Val{GET}) = read_decimalnl_short
+argument(::Val{BINGET}) = read_uint1
+argument(::Val{LONG_BINGET}) = read_uint4
+argument(::Val{PUT}) = read_decimalnl_short
+argument(::Val{BINPUT}) = read_uint1
+argument(::Val{LONG_BINPUT}) = read_uint4
+argument(::Val{MEMOIZE}) = nothing
+argument(::Val{EXT1}) = read_uint1
+argument(::Val{EXT2}) = read_uint2
+argument(::Val{EXT4}) = read_int4
+argument(::Val{GLOBAL}) = read_stringnl_noescape_pair
+argument(::Val{STACK_GLOBAL}) = nothing
+argument(::Val{REDUCE}) = nothing
+argument(::Val{BUILD}) = nothing
+argument(::Val{INST}) = read_stringnl_noescape_pair
+argument(::Val{OBJ}) = nothing
+argument(::Val{NEWOBJ}) = nothing
+argument(::Val{NEWOBJ_EX}) = nothing
+argument(::Val{PROTO}) = read_uint1
+argument(::Val{STOP}) = nothing
+argument(::Val{FRAME}) = read_uint8
+argument(::Val{PERSID}) = read_stringnl_noescape
+argument(::Val{BINPERSID}) = nothing
 
 function maybe_opcode(x)
     if x in keys(namemap(OpCode))
@@ -642,7 +716,8 @@ function genops(io::IO, yield_end_pos=false)
             isnothing(opcode) &&
                 error("at position $pos, code $code unknown.")
 
-            arg = arguement(opcode)
+            argf = arguement(opcode)
+            arg = isnothing(argf) ? nothing : arg(io)
             if yield_end_pos
                 put!(chn, (opcode, arg, pos, position(io)))
             else

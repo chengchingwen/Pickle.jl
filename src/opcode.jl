@@ -723,6 +723,7 @@ function genops(io::IO, yield_end_pos=false)
             else
                 put!(chn, (opcode, arg, pos))
             end
+            isequal(STOP)(opcode) && break
         end
     end
 end

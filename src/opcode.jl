@@ -2,95 +2,95 @@ using Base.Enums: namemap
 
 @enum OpCode::UInt8 begin
     # integers
-    int                = codepoint('I')
-    binint             = codepoint('J')
-    binint1            = codepoint('K')
-    binint2            = codepoint('M')
-    long               = codepoint('L')
-    long1              = 0x8a
-    long4              = 0x8b
+    INT                = codepoint('I')
+    BININT             = codepoint('J')
+    BININT1            = codepoint('K')
+    BININT2            = codepoint('M')
+    LONG               = codepoint('L')
+    LONG1              = 0x8a
+    LONG4              = 0x8b
     # strings
-    string             = codepoint('S')
-    binstring          = codepoint('T')
-    short_binstring    = codepoint('U')
+    STRING             = codepoint('S')
+    BINSTRING          = codepoint('T')
+    SHORT_BINSTRING    = codepoint('U')
     # bytes (protocal 3 and higher)
-    binbytes           = codepoint('B')
-    short_binbytes     = codepoint('C')
-    binbytes8          = 0x8e
+    BINBYTES           = codepoint('B')
+    SHORT_BINBYTES     = codepoint('C')
+    BINBYTES8          = 0x8e
     # bytearray (protocal 5 and higher)
-    bytearray8         = 0x96
+    BYTEARRAY8         = 0x96
     # out-of-band buffer (protocol 5 and higher)
-    next_buffer        = 0x97
-    readonly_buffer    = 0x98
+    NEXT_BUFFER        = 0x97
+    READONLY_BUFFER    = 0x98
     # none
-    none               = codepoint('N')
+    NONE               = codepoint('N')
     # bool (protocal 2 and higher)
-    newtrue            = 0x88
-    newfalse           = 0x89
+    NEWTRUE            = 0x88
+    NEWFALSE           = 0x89
     # unicode string
-    unicode            = codepoint('V')
-    short_binunicode   = 0x8c
-    binunicode         = codepoint('X')
-    binunicode8        = 0x8d
+    UNICODE            = codepoint('V')
+    SHORT_BINUNICODE   = 0x8c
+    BINUNICODE         = codepoint('X')
+    BINUNICODE8        = 0x8d
     # floats
-    float              = codepoint('F')
-    binfloat           = codepoint('G')
+    FLOAT              = codepoint('F')
+    BINFLOAT           = codepoint('G')
     # build list
-    empty_list         = codepoint(']')
-    append             = codepoint('a')
-    appends            = codepoint('e')
-    list               = codepoint('l')
+    EMPTY_LIST         = codepoint(']')
+    APPEND             = codepoint('a')
+    APPENDS            = codepoint('e')
+    LIST               = codepoint('l')
     # build tuples
-    empty_tuple        = codepoint(')')
-    tuple              = codepoint('t')
-    tuple1             = 0x85
-    tuple2             = 0x86
-    tuple3             = 0x87
+    EMPTY_TUPLE        = codepoint(')')
+    TUPLE              = codepoint('t')
+    TUPLE1             = 0x85
+    TUPLE2             = 0x86
+    TUPLE3             = 0x87
     # build dicts
-    empty_dict         = codepoint('}')
-    dict               = codepoint('d')
-    setitem            = codepoint('s')
-    setitems           = codepoint('u')
+    EMPTY_DICT         = codepoint('}')
+    DICT               = codepoint('d')
+    SETITEM            = codepoint('s')
+    SETITEMS           = codepoint('u')
     # build sets
-    empty_set          = 0x8f
-    additems           = 0x90
+    EMPTY_SET          = 0x8f
+    ADDITEMS           = 0x90
     # build frozensets
-    frozenset          = 0x91
+    FROZENSET          = 0x91
     # stack manipulation
-    pop                = codepoint('0')
-    dup                = codepoint('2')
-    mark               = codepoint('(')
-    pop_mark           = codepoint('1')
+    POP                = codepoint('0')
+    DUP                = codepoint('2')
+    MARK               = codepoint('(')
+    POP_MARK           = codepoint('1')
     # memo manipulation
-    get                = codepoint('g')
-    binget             = codepoint('h')
-    long_binget        = codepoint('j')
-    put                = codepoint('p')
-    binput             = codepoint('q')
-    long_binput        = codepoint('r')
-    memoize            = 0x94
+    GET                = codepoint('g')
+    BINGET             = codepoint('h')
+    LONG_BINGET        = codepoint('j')
+    PUT                = codepoint('p')
+    BINPUT             = codepoint('q')
+    LONG_BINPUT        = codepoint('r')
+    MEMOIZE            = 0x94
     # extension registry
-    ext1               = 0x82
-    ext2               = 0x83
-    ext4               = 0x84
+    EXT1               = 0x82
+    EXT2               = 0x83
+    EXT4               = 0x84
     # push class or function to stack by module and name
-    Global             = codepoint('c')
-    stack_Global       = 0x93
+    GLOBAL             = codepoint('c')
+    STACK_GLOBAL       = 0x93
     # build unknown objects
-    reduce             = codepoint('R')
-    build              = codepoint('b')
-    inst               = codepoint('i')
-    obj                = codepoint('o')
-    newobj             = 0x81
-    newobj_ex          = 0x92
+    REDUCE             = codepoint('R')
+    BUILD              = codepoint('b')
+    INST               = codepoint('i')
+    OBJ                = codepoint('o')
+    NEWOBJ             = 0x81
+    NEWOBJ_EX          = 0x92
     # machine control
-    proto              = 0x80
-    stop               = codepoint('.')
+    PROTO              = 0x80
+    STOP               = codepoint('.')
     # Framing support
-    frame              = 0x95
+    FRAME              = 0x95
     # persistent IDs
-    persid             = codepoint('P')
-    binpersid          = codepoint('Q')
+    PERSID             = codepoint('P')
+    BINPERSID          = codepoint('Q')
 end
 
 function maybe_opcode(x)

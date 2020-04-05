@@ -63,10 +63,10 @@ read_unicodestring4(io::IO)  = read_multiple(io, String, "unicodestring4", read_
 read_unicodestring8(io::IO)  = read_multiple(io, String, "unicodestring8", read_uint8)
 ########################
 
-function parseint(s)
-    i = tryparse(Int, s)
+function parseint(s; base=10)
+    i = tryparse(Int, s; base=base)
     !isnothing(i) && return i
-    bi = tryparse(BigInt, s)
+    bi = tryparse(BigInt, s; base=base)
     !isnothing(bi) && return bi
     return nothing
 end
@@ -81,7 +81,7 @@ function read_decimalnl_short(io::IO)
     end
 
     int = parseint(s)
-    !isnothing(int) &&
+    isnothing(int) &&
         error("invalid literal for Integer with base 10: $s")
     return int
 end
@@ -93,7 +93,7 @@ function read_decimalnl_long(io::IO)
     end
 
     int = parseint(s)
-    !isnothing(int) &&
+    isnothing(int) &&
         error("invalid literal for Integer with base 10: $s")
     return int
 end
@@ -105,5 +105,21 @@ end
 
 read_float8(io::IO) = bswap(read(io, Float64))
 
-# function read_long1(io::IO) = 
-# read_long4(io::IO) = 
+function int_from_bytes(x)
+    islittle = Base.ENDIAN_BOM == 0x04030201
+    islittle && (x = reverse(x))
+    isneg = isone(x[end] >> 7)
+    if !isneg
+        s = Base.bytes2hex(x)
+        i = parseint(s; base=16)
+        isnothing(i) && error("2's complement bytes parse error")
+    else
+        s = Base.bytes2hex(x .⊻ 0xff)
+        i = parseint(s; base=16)
+        isnothing(i) && error("2's complement bytes parse error")
+        return -i-1
+    end
+end
+
+read_long1(io::IO) = int_from_bytes(read_multiple(io, "bytes1", read_uint1))
+read_long4(io::IO) = int_from_bytes(read_multiple(io, "bytes4", read_int4))

@@ -633,11 +633,6 @@ function maybe_opcode(x)
     return nothing
 end
 
-if VERSION < v"1.1"
-    isnothing(::Nothing) = true
-    isnothing(::Any) = false
-end
-
 function genops(io::IO, yield_end_pos=false)
     Channel() do chn
         while !eof(io)

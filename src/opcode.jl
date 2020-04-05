@@ -93,6 +93,97 @@ using Base.Enums: namemap
     BINPERSID          = codepoint('Q')
 end
 
+Docs.getdoc(op::OpCode) = Docs.getdoc(Val(op))
+Docs.getdoc(::Val{INT}) = "push integer or bool"
+Docs.getdoc(::Val{BININT}) = "push four-byte signed int"
+Docs.getdoc(::Val{BININT1}) = "push 1-byte unsigned int"
+Docs.getdoc(::Val{BININT2}) = "push 2-byte unsigned int"
+Docs.getdoc(::Val{LONG}) = "push long"
+Docs.getdoc(::Val{LONG1}) = "push long from < 256 bytes"
+Docs.getdoc(::Val{LONG4}) = "push really big long"
+
+Docs.getdoc(::Val{STRING}) = "push string; NL-terminated string argument"
+Docs.getdoc(::Val{BINSTRING}) = "push string; counted binary string argument"
+Docs.getdoc(::Val{SHORT_BINSTRING}) = "\"     \"   ;    \"      \"       \"      \" < 256 bytes"
+
+Docs.getdoc(::Val{BINBYTES}) = "push bytes; counted binary string argument"
+Docs.getdoc(::Val{SHORT_BINBYTES}) = "\"     \"   ;    \"      \"       \"      \" < 256 bytes"
+Docs.getdoc(::Val{BINBYTES8}) = "push very long bytes string"
+
+Docs.getdoc(::Val{BYTEARRAY8}) = "push bytearray"
+
+Docs.getdoc(::Val{NEXT_BUFFER}) = "push next out-of-band buffer"
+Docs.getdoc(::Val{READONLY_BUFFER}) = "make top of stack readonly"
+
+Docs.getdoc(::Val{NONE}) = "push None"
+
+Docs.getdoc(::Val{NEWTRUE}) = "push True"
+Docs.getdoc(::Val{NEWFALSE}) = "push False"
+
+Docs.getdoc(::Val{UNICODE}) = "push Unicode string; raw-unicode-escaped'd argument"
+Docs.getdoc(::Val{SHORT_BINUNICODE}) = "push short string; UTF-8 length < 256 bytes"
+Docs.getdoc(::Val{BINUNICODE}) = "  \"     \"       \"  ; counted UTF-8 string argument"
+Docs.getdoc(::Val{BINUNICODE8}) = "push very long string"
+
+Docs.getdoc(::Val{FLOAT}) = "push float object; decimal string argument"
+Docs.getdoc(::Val{BINFLOAT}) = "push float; arg is 8-byte float encoding"
+
+Docs.getdoc(::Val{EMPTY_LIST}) = "push empty list"
+Docs.getdoc(::Val{APPEND}) = "append stack top to list below it"
+Docs.getdoc(::Val{APPENDS}) = "extend list on stack by topmost stack slice"
+Docs.getdoc(::Val{LIST}) = "build list from topmost stack items"
+
+Docs.getdoc(::Val{EMPTY_TUPLE}) = "push empty tuple"
+Docs.getdoc(::Val{TUPLE}) = "build tuple from topmost stack items"
+Docs.getdoc(::Val{TUPLE1}) = "build 1-tuple from stack top"
+Docs.getdoc(::Val{TUPLE2}) = "build 2-tuple from two topmost stack items"
+Docs.getdoc(::Val{TUPLE3}) = "build 3-tuple from three topmost stack items"
+
+Docs.getdoc(::Val{EMPTY_DICT}) = "push empty dict"
+Docs.getdoc(::Val{DICT}) = "build a dict from stack items"
+Docs.getdoc(::Val{SETITEM}) = "add key+value pair to dict"
+Docs.getdoc(::Val{SETITEMS}) = "modify dict by adding topmost key+value pairs"
+
+Docs.getdoc(::Val{EMPTY_SET}) = "push empty set on the stack"
+Docs.getdoc(::Val{ADDITEMS}) = "modify set by adding topmost stack items"
+
+Docs.getdoc(::Val{FROZENSET}) = "build frozenset from topmost stack items"
+
+Docs.getdoc(::Val{POP}) = "discard topmost stack item"
+Docs.getdoc(::Val{DUP}) = "duplicate top stack item"
+Docs.getdoc(::Val{MARK}) = "push special markobject on stack"
+Docs.getdoc(::Val{POP_MARK}) = "discard stack top through topmost markobject"
+
+Docs.getdoc(::Val{GET}) = "push item from memo on stack; index is string arg"
+Docs.getdoc(::Val{BINGET}) = "  \"    \"    \"    \"   \"   \"  ;   \"    \" 1-byte arg"
+Docs.getdoc(::Val{LONG_BINGET}) = "push item from memo on stack; index is 4-byte arg"
+Docs.getdoc(::Val{PUT}) = "store stack top in memo; index is string arg"
+Docs.getdoc(::Val{BINPUT}) = "  \"     \"    \"   \"   \" ;   \"    \" 1-byte arg"
+Docs.getdoc(::Val{LONG_BINPUT}) = "  \"     \"    \"   \"   \" ;   \"    \" 4-byte arg"
+Docs.getdoc(::Val{MEMOIZE}) = "store top of the stack in memo"
+
+Docs.getdoc(::Val{EXT1}) = "push object from extension registry; 1-byte index"
+Docs.getdoc(::Val{EXT2}) = "push object from extension registry; 2-byte index"
+Docs.getdoc(::Val{EXT4}) = "push object from extension registry; 4-byte index"
+
+Docs.getdoc(::Val{GLOBAL}) = "push self.find_class(modname, name); 2 string args"
+Docs.getdoc(::Val{STACK_GLOBAL}) = "same as GLOBAL but using names on the stacks"
+
+Docs.getdoc(::Val{REDUCE}) = "apply callable to argtuple, both on stack"
+Docs.getdoc(::Val{BUILD}) = "call __setstate__ or __dict__.update()"
+Docs.getdoc(::Val{INST}) = "build & push class instance"
+Docs.getdoc(::Val{OBJ}) = "build & push class instance"
+Docs.getdoc(::Val{NEWOBJ}) = "build object by applying cls.__new__ to argtuple"
+Docs.getdoc(::Val{NEWOBJ_EX}) = "like NEWOBJ but work with keyword only arguments"
+
+Docs.getdoc(::Val{PROTO}) = "identify pickle protocol"
+Docs.getdoc(::Val{STOP}) = "every pickle ends with STOP"
+
+Docs.getdoc(::Val{FRAME}) = "indicate the beginning of a new frame"
+
+Docs.getdoc(::Val{PERSID}) = "push persistent object; id is taken from string arg"
+Docs.getdoc(::Val{BINPERSID}) = " \"       \"         \"  ;  \"  \"   \"     \"  stack"
+
 function maybe_opcode(x)
     if x in keys(namemap(OpCode))
         return OpCode(x)

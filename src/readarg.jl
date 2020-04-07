@@ -105,10 +105,10 @@ read_stringnl_noescape(io::IO) = read_stringnl(io, stripquotes=false)
 # Examples
 ```jldoctest
 julia> Pickle.read_stringnl_noescape_pair(IOBuffer(b"Queue\nEmpty\njunk"))
-"Queue Empty"
+("Queue", "Empty")
 ```
 """
-read_stringnl_noescape_pair(io::IO) = "$(read_stringnl_noescape(io)) $(read_stringnl_noescape(io))"
+read_stringnl_noescape_pair(io::IO) = (read_stringnl_noescape(io), read_stringnl_noescape(io))
 
 function read_multiple(io::IO, name::String, nf::Function)
     n = nf(io)

@@ -718,8 +718,8 @@ function genops(io::IO, yield_end_pos=false)
             isnothing(opcode) &&
                 error("at position $pos, code $code unknown.")
 
-            argf = arguement(opcode)
-            arg = isnothing(argf) ? nothing : arg(io)
+            argf = argument(opcode)
+            arg = isnothing(argf) ? nothing : argf(io)
             if yield_end_pos
                 put!(chn, (opcode, arg, pos, position(io)))
             else

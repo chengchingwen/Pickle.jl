@@ -106,6 +106,7 @@ end
 read_float8(io::IO) = bswap(read(io, Float64))
 
 function int_from_bytes(x)
+    isempty(x) && return 0
     islittle = Base.ENDIAN_BOM == 0x04030201
     islittle && (x = reverse(x))
     isneg = isone(first(x) >> 7)

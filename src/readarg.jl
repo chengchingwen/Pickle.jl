@@ -1,9 +1,81 @@
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_uint1(IOBuffer(b"\xff"))
+0xff
+```
+"""
 read_uint1(io::IO) = read(io, UInt8)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_uint2(IOBuffer(b"\xff\x00"))
+0x00ff
+
+julia> Pickle.read_uint2(IOBuffer(b"\xff\xff"))
+0xffff
+```
+"""
 read_uint2(io::IO) = read(io, UInt16)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_int4(IOBuffer(b"\xff\x00\x00\x00"))
+255
+
+julia> Pickle.read_int4(IOBuffer(b"\x00\x00\x00\x80")) == -2^31
+true
+```
+"""
 read_int4(io::IO) = read(io, Int32)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_uint4(IOBuffer(b"\xff\x00\x00\x00"))
+0x000000ff
+
+julia> Pickle.read_uint4(IOBuffer(b"\x00\x00\x00\x80")) == 2^31
+true
+```
+"""
 read_uint4(io::IO) = read(io, UInt32)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_uint8(IOBuffer(b"\xff\x00\x00\x00\x00\x00\x00\x00"))
+0x00000000000000ff
+
+julia> Pickle.read_uint8(IOBuffer(b"\xff\xff\xff\xff\xff\xff\xff\xff")) == UInt64(2^64) - UInt64(1)
+true
+```
+"""
 read_uint8(io::IO) = read(io, UInt64)
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_stringnl(IOBuffer(b"'abcd'\nefg\n"))
+"abcd"
+
+julia> Pickle.read_stringnl(IOBuffer(b"\n"))
+ERROR: no string quotes around
+[...]
+
+julia> Pickle.read_stringnl(IOBuffer(b"\n"), stripquotes=false)
+""
+
+julia> Pickle.read_stringnl(IOBuffer(b"''\n"))
+""
+
+julia> Pickle.read_stringnl(IOBuffer(b"\"abcd\""))
+ERROR: no newline found when trying to read stringnl
+[...]
+```
+"""
 function read_stringnl(io::IO; decode=true, stripquotes=true)
     data = readline(io; keep=true)
     data[end] != '\n' && error("no newline found when trying to read stringnl")
@@ -28,6 +100,14 @@ function read_stringnl(io::IO; decode=true, stripquotes=true)
 end
 
 read_stringnl_noescape(io::IO) = read_stringnl(io, stripquotes=false)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_stringnl_noescape_pair(IOBuffer(b"Queue\nEmpty\njunk"))
+"Queue Empty"
+```
+"""
 read_stringnl_noescape_pair(io::IO) = "$(read_stringnl_noescape(io)) $(read_stringnl_noescape(io))"
 
 function read_multiple(io::IO, name::String, nf::Function)
@@ -38,11 +118,84 @@ function read_multiple(io::IO, name::String, nf::Function)
 end
 read_multiple(io::IO, T::Type, name::String, nf::Function) = T(read_multiple(io, name, nf))
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_string1(IOBuffer(b"\x00"))
+""
+
+julia> Pickle.read_string1(IOBuffer(b"\x03abcdef"))
+"abc"
+```
+"""
 read_string1(io::IO) = read_multiple(io, String, "string1", read_uint1)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_string4(IOBuffer(b"\x00\x00\x00\x00abc"))
+""
+
+julia> Pickle.read_string4(IOBuffer(b"\x03\x00\x00\x00abcdef"))
+"abc"
+
+julia> Pickle.read_string4(IOBuffer(b"\x00\x00\x00\x03abcdef"))
+ERROR: expected 50331648 bytes in string4, but only 6 remain
+[...]
+```
+"""
 read_string4(io::IO) = read_multiple(io, String, "string4", read_int4)
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_bytes1(IOBuffer(b"\x00"))
+0-element Array{UInt8,1}
+
+julia> Pickle.read_bytes1(IOBuffer(b"\x03abcdef"))
+3-element Array{UInt8,1}:
+ 0x61
+ 0x62
+ 0x63
+
+julia> Pickle.read_bytes1(IOBuffer(b"\x03abcdef")) |> String
+"abc"
+```
+"""
 read_bytes1(io::IO) = read_multiple(io, "bytes1", read_uint1)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_bytes4(IOBuffer(b"\x00\x00\x00\x00abc"))
+0-element Array{UInt8,1}
+
+julia> Pickle.read_bytes4(IOBuffer(b"\x03\x00\x00\x00abcdef"))
+3-element Array{UInt8,1}:
+ 0x61
+ 0x62
+ 0x63
+
+julia> Pickle.read_bytes4(IOBuffer(b"\x00\x00\x00\x03abcdef"))
+ERROR: expected 50331648 bytes in bytes4, but only 6 remain
+[...]
+```
+"""
 read_bytes4(io::IO) = read_multiple(io, "bytes4", read_uint4)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_bytes8(IOBuffer(b"\x00\x00\x00\x00\x00\x00\x00\x00abc"))
+0-element Array{UInt8,1}
+
+julia> Pickle.read_bytes8(IOBuffer(b"\x03\x00\x00\x00\x00\x00\x00\x00abcdef"))
+3-element Array{UInt8,1}:
+ 0x61
+ 0x62
+ 0x63
+```
+"""
 read_bytes8(io::IO) = read_multiple(io, "bytes8", read_uint8)
 
 
@@ -50,7 +203,28 @@ read_bytes8(io::IO) = read_multiple(io, "bytes8", read_uint8)
 ########################
 # this function only make sense in python.
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_bytearray8(IOBuffer(b"\x00\x00\x00\x00\x00\x00\x00\x00abc"))
+0-element Array{UInt8,1}
+
+julia> Pickle.read_bytearray8(IOBuffer(b"\x03\x00\x00\x00\x00\x00\x00\x00abcdef"))
+3-element Array{UInt8,1}:
+ 0x61
+ 0x62
+ 0x63
+```
+"""
 read_bytearray8(io::IO) = read_multiple(io, "bytearray8", read_uint8)
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_unicodestringnl(IOBuffer(b"abc\\uabcd\njunk")) == "abc\uabcd"
+true
+```
+"""
 function read_unicodestringnl(io::IO)
     data = readline(io; keep=true)
     data[end] != '\n' && error("no newline found when trying to read unicodestringnl")
@@ -71,6 +245,17 @@ function parseint(s; base=10)
     return nothing
 end
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_decimalnl_short(IOBuffer(b"1234\n56"))
+1234
+
+julia> Pickle.read_decimalnl_short(IOBuffer(b"1234L\n56"))
+ERROR: invalid literal for Integer with base 10: 1234L
+[...]
+```
+"""
 function read_decimalnl_short(io::IO)
     s = read_stringnl(io, decode=false, stripquotes=false)
 
@@ -86,6 +271,16 @@ function read_decimalnl_short(io::IO)
     return int
 end
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_decimalnl_long(IOBuffer(b"1234L\n56"))
+1234
+
+julia> Pickle.read_decimalnl_long(IOBuffer(b"123456789012345678901234L\n6"))
+123456789012345678901234
+```
+"""
 function read_decimalnl_long(io::IO)
     s = read_stringnl(io, decode=false, stripquotes=false)
     if s[end] == 'L'
@@ -98,15 +293,28 @@ function read_decimalnl_long(io::IO)
     return int
 end
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_floatnl(IOBuffer(b"-1.25\n6"))
+-1.25
+```
+"""
 function read_floatnl(io::IO)
     s = read_stringnl(io, decode=false, stripquotes=false)
     return parse(Float64, s)
 end
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_float8(IOBuffer(b"\xbf\xf4\x00\x00\x00\x00\x00\x00\n"))
+-1.25
+```
+"""
 read_float8(io::IO) = bswap(read(io, Float64))
 
 function int_from_bytes(x)
-    isempty(x) && return 0
     islittle = Base.ENDIAN_BOM == 0x04030201
     islittle && (x = reverse(x))
     isneg = isone(first(x) >> 7)
@@ -123,5 +331,44 @@ function int_from_bytes(x)
     end
 end
 
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_long1(IOBuffer(b"\x00"))
+0
+
+julia> Pickle.read_long1(IOBuffer(b"\x02\xff\x00"))
+255
+
+julia> Pickle.read_long1(IOBuffer(b"\x02\xff\x7f"))
+32767
+
+julia> Pickle.read_long1(IOBuffer(b"\x02\x00\xff"))
+-256
+
+julia> Pickle.read_long1(IOBuffer(b"\x02\x00\x80"))
+-32768
+```
+"""
 read_long1(io::IO) = int_from_bytes(read_multiple(io, "bytes1", read_uint1))
+
+"""
+# Examples
+```jldoctest
+julia> Pickle.read_long4(IOBuffer(b"\x02\x00\x00\x00\xff\x00"))
+255
+
+julia> Pickle.read_long4(IOBuffer(b"\x02\x00\x00\x00\xff\x7f"))
+32767
+
+julia> Pickle.read_long4(IOBuffer(b"\x02\x00\x00\x00\x00\xff"))
+-256
+
+julia> Pickle.read_long4(IOBuffer(b"\x02\x00\x00\x00\x00\x80"))
+-32768
+
+julia> Pickle.read_long4(IOBuffer(b"\x00\x00\x00\x00"))
+0
+```
+"""
 read_long4(io::IO) = int_from_bytes(read_multiple(io, "bytes4", read_int4))

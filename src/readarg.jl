@@ -34,7 +34,7 @@ function read_multiple(io::IO, name::String, nf::Function)
     n = nf(io)
     data = read(io, n)
     length(data) != n && error("expected $n bytes in $name, but only $(length(data)) remain")
-    return T(data)
+    return data
 end
 read_multiple(io::IO, T::Type, name::String, nf::Function) = T(read_multiple(io, name, nf))
 

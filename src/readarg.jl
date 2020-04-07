@@ -75,12 +75,7 @@ julia> Pickle.read_stringnl(IOBuffer(b"'abcd'\nefg\n"))
 
 julia> Pickle.read_stringnl(IOBuffer(b"\n"))
 ERROR: no string quotes around
-
-Stacktrace:
- [1] error(::String) at ./error.jl:33
- [2] read_stringnl(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}; decode::Bool, stripquotes::Bool) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:14
- [3] read_stringnl(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:8
- [4] top-level scope at REPL[35]:1
+[...]
 
 julia> Pickle.read_stringnl(IOBuffer(b"\n"), stripquotes=false)
 ""
@@ -90,11 +85,7 @@ julia> Pickle.read_stringnl(IOBuffer(b"''\n"))
 
 julia> Pickle.read_stringnl(IOBuffer(b"\"abcd\""))
 ERROR: no newline found when trying to read stringnl
-Stacktrace:
- [1] error(::String) at ./error.jl:33
- [2] read_stringnl(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}; decode::Bool, stripquotes::Bool) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:9
- [3] read_stringnl(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:8
- [4] top-level scope at REPL[38]:1
+[...]
 ```
 """
 function read_stringnl(io::IO; decode=true, stripquotes=true)
@@ -168,12 +159,7 @@ julia> Pickle.read_string4(IOBuffer(b"\x03\x00\x00\x00abcdef"))
 
 julia> Pickle.read_string4(IOBuffer(b"\x00\x00\x00\x03abcdef"))
 ERROR: expected 50331648 bytes in string4, but only 6 remain
-Stacktrace:
- [1] error(::String) at ./error.jl:33
- [2] read_multiple(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}, ::String, ::typeof(Pickle.read_int4)) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:139
- [3] read_multiple at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:142 [inlined]
- [4] read_string4(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:154
- [5] top-level scope at REPL[6]:1
+[...]
 ```
 """
 read_string4(io::IO) = read_multiple(io, String, "string4", read_int4)
@@ -214,11 +200,7 @@ julia> Pickle.read_bytes4(IOBuffer(b"\x03\x00\x00\x00abcdef"))
 
 julia> Pickle.read_bytes4(IOBuffer(b"\x00\x00\x00\x03abcdef"))
 ERROR: expected 50331648 bytes in bytes4, but only 6 remain
-Stacktrace:
- [1] error(::String) at ./error.jl:33
- [2] read_multiple(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}, ::String, ::typeof(Pickle.read_uint4)) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:139
- [3] read_bytes4(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:157
- [4] top-level scope at REPL[12]:1
+[...]
 ```
 """
 read_bytes4(io::IO) = read_multiple(io, "bytes4", read_uint4)
@@ -301,10 +283,7 @@ julia> Pickle.read_decimalnl_short(IOBuffer(b"1234\n56"))
 
 julia> Pickle.read_decimalnl_short(IOBuffer(b"1234L\n56"))
 ERROR: invalid literal for Integer with base 10: 1234L
-Stacktrace:
- [1] error(::String) at ./error.jl:33
- [2] read_decimalnl_short(::Base.GenericIOBuffer{Base.CodeUnits{UInt8,String}}) at /media/yuehhua/Workbench/workspace/Pickle.jl/src/readarg.jl:196
- [3] top-level scope at REPL[40]:1
+[...]
 ```
 """
 function read_decimalnl_short(io::IO)

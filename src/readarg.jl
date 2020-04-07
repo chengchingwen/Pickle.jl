@@ -267,8 +267,8 @@ read_bytearray8(io::IO) = read_multiple(io, "bytearray8", read_uint8)
 ```jldoctest
 julia> using Pickle
 
-julia> Pickle.read_unicodestringnl(IOBuffer(b"abc\\uabcd\njunk"))
-"abcꯍ"
+julia> Pickle.read_unicodestringnl(IOBuffer(b"abc\\uabcd\njunk")) == "abc\uabcd"
+true
 ```
 """
 function read_unicodestringnl(io::IO)

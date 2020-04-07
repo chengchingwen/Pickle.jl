@@ -108,11 +108,12 @@ read_float8(io::IO) = bswap(read(io, Float64))
 function int_from_bytes(x)
     islittle = Base.ENDIAN_BOM == 0x04030201
     islittle && (x = reverse(x))
-    isneg = isone(x[end] >> 7)
+    isneg = isone(first(x) >> 7)
     if !isneg
         s = Base.bytes2hex(x)
         i = parseint(s; base=16)
         isnothing(i) && error("2's complement bytes parse error")
+        return i
     else
         s = Base.bytes2hex(x .⊻ 0xff)
         i = parseint(s; base=16)

@@ -709,6 +709,12 @@ function maybe_opcode(x)
     return nothing
 end
 
+
+"""
+    genops(io::IO, yield_end_pos=false)
+
+Generate/Dump all the opcode from pickle io.
+"""
 function genops(io::IO, yield_end_pos=false)
     Channel() do chn
         while !eof(io)

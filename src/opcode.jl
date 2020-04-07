@@ -93,8 +93,10 @@ using Base.Enums: namemap
     BINPERSID          = codepoint('Q')
 end
 
+using Markdown
+
 Docs.getdoc(op::OpCode) = Docs.getdoc(Val(op))
-Docs.getdoc(::Val{INT}) = """Push an integer or bool.
+Docs.getdoc(::Val{INT}) = md"""Push an integer or bool.
 
       The argument is a newline-terminated decimal literal string.
       The intent may have been that this always fit in a short Python int,
@@ -111,25 +113,25 @@ Docs.getdoc(::Val{INT}) = """Push an integer or bool.
       (and later) unpicklers special-case these and return bool instead;
       earlier unpicklers ignore the leading "0" and return the int.
       """
-Docs.getdoc(::Val{BININT}) = """Push a four-byte signed integer.
+Docs.getdoc(::Val{BININT}) = md"""Push a four-byte signed integer.
 
       This handles the full range of Python (short) integers on a 32-bit
       box, directly as binary bytes (1 for the opcode and 4 for the integer).
       If the integer is non-negative and fits in 1 or 2 bytes, pickling via
       BININT1 or BININT2 saves space.
       """
-Docs.getdoc(::Val{BININT1}) = """Push a one-byte unsigned integer.
+Docs.getdoc(::Val{BININT1}) = md"""Push a one-byte unsigned integer.
 
       This is a space optimization for pickling very small non-negative ints,
       in range(256).
       """
-Docs.getdoc(::Val{BININT2}) = """Push a two-byte unsigned integer.
+Docs.getdoc(::Val{BININT2}) = md"""Push a two-byte unsigned integer.
 
       This is a space optimization for pickling small positive ints, in
       range(256, 2**16).  Integers in range(256) can also be pickled via
       BININT2, but BININT1 instead saves a byte.
       """
-Docs.getdoc(::Val{LONG}) = """Push a long integer.
+Docs.getdoc(::Val{LONG}) = md"""Push a long integer.
 
       The same as INT, except that the literal ends with 'L', and always
       unpickles to a Python long.  There doesn't seem a real purpose to the
@@ -140,16 +142,16 @@ Docs.getdoc(::Val{LONG}) = """Push a long integer.
       conversion).  Proto 2 added linear-time (in C; still quadratic-time
       in Python) LONG1 and LONG4 opcodes.
       """
-Docs.getdoc(::Val{LONG1}) = """Long integer using one-byte length.
+Docs.getdoc(::Val{LONG1}) = md"""Long integer using one-byte length.
 
       A more efficient encoding of a Python long; the long1 encoding
       says it all."""
-Docs.getdoc(::Val{LONG4}) = """Long integer using found-byte length.
+Docs.getdoc(::Val{LONG4}) = md"""Long integer using found-byte length.
 
       A more efficient encoding of a Python long; the long4 encoding
       says it all."""
 
-Docs.getdoc(::Val{STRING}) = """Push a Python string object.
+Docs.getdoc(::Val{STRING}) = md"""Push a Python string object.
 
       The argument is a repr-style string, with bracketing quote characters,
       and perhaps embedded escapes.  The argument extends until the next
@@ -158,7 +160,7 @@ Docs.getdoc(::Val{STRING}) = """Push a Python string object.
       'ASCII'.  If the encoding given was 'bytes' however, they will be
       decoded as bytes object instead.
       """
-Docs.getdoc(::Val{BINSTRING}) = """Push a Python string object.
+Docs.getdoc(::Val{BINSTRING}) = md"""Push a Python string object.
 
       There are two arguments: the first is a 4-byte little-endian
       signed int giving the number of bytes in the string, and the
@@ -168,7 +170,7 @@ Docs.getdoc(::Val{BINSTRING}) = """Push a Python string object.
       'ASCII'.  If the encoding given was 'bytes' however, they will be
       decoded as bytes object instead.
       """
-Docs.getdoc(::Val{SHORT_BINSTRING}) = """Push a Python string object.
+Docs.getdoc(::Val{SHORT_BINSTRING}) = md"""Push a Python string object.
 
       There are two arguments: the first is a 1-byte unsigned int giving
       the number of bytes in the string, and the second is that many
@@ -179,26 +181,26 @@ Docs.getdoc(::Val{SHORT_BINSTRING}) = """Push a Python string object.
       object instead.
       """
 
-Docs.getdoc(::Val{BINBYTES}) = """Push a Python bytes object.
+Docs.getdoc(::Val{BINBYTES}) = md"""Push a Python bytes object.
 
       There are two arguments:  the first is a 4-byte little-endian unsigned int
       giving the number of bytes, and the second is that many bytes, which are
       taken literally as the bytes content.
       """
-Docs.getdoc(::Val{SHORT_BINBYTES}) = """Push a Python bytes object.
+Docs.getdoc(::Val{SHORT_BINBYTES}) = md"""Push a Python bytes object.
 
       There are two arguments:  the first is a 1-byte unsigned int giving
       the number of bytes, and the second is that many bytes, which are taken
       literally as the string content.
       """
-Docs.getdoc(::Val{BINBYTES8}) = """Push a Python bytes object.
+Docs.getdoc(::Val{BINBYTES8}) = md"""Push a Python bytes object.
 
       There are two arguments:  the first is an 8-byte unsigned int giving
       the number of bytes in the string, and the second is that many bytes,
       which are taken literally as the string content.
       """
 
-Docs.getdoc(::Val{BYTEARRAY8}) = """Push a Python bytearray object.
+Docs.getdoc(::Val{BYTEARRAY8}) = md"""Push a Python bytearray object.
 
       There are two arguments:  the first is an 8-byte unsigned int giving
       the number of bytes in the bytearray, and the second is that many bytes,
@@ -213,32 +215,32 @@ Docs.getdoc(::Val{NONE}) = "Push None on the stack."
 Docs.getdoc(::Val{NEWTRUE}) = "Push True onto the stack."
 Docs.getdoc(::Val{NEWFALSE}) = "Push False onto the stack."
 
-Docs.getdoc(::Val{UNICODE}) = """Push a Python Unicode string object.
+Docs.getdoc(::Val{UNICODE}) = md"""Push a Python Unicode string object.
 
       The argument is a raw-unicode-escape encoding of a Unicode string,
       and so may contain embedded escape sequences.  The argument extends
       until the next newline character.
       """
-Docs.getdoc(::Val{SHORT_BINUNICODE}) = """Push a Python Unicode string object.
+Docs.getdoc(::Val{SHORT_BINUNICODE}) = md"""Push a Python Unicode string object.
 
       There are two arguments:  the first is a 1-byte little-endian signed int
       giving the number of bytes in the string.  The second is that many
       bytes, and is the UTF-8 encoding of the Unicode string.
       """
-Docs.getdoc(::Val{BINUNICODE}) = """Push a Python Unicode string object.
+Docs.getdoc(::Val{BINUNICODE}) = md"""Push a Python Unicode string object.
 
       There are two arguments:  the first is a 4-byte little-endian unsigned int
       giving the number of bytes in the string.  The second is that many
       bytes, and is the UTF-8 encoding of the Unicode string.
       """
-Docs.getdoc(::Val{BINUNICODE8}) = """Push a Python Unicode string object.
+Docs.getdoc(::Val{BINUNICODE8}) = md"""Push a Python Unicode string object.
 
       There are two arguments:  the first is an 8-byte little-endian signed int
       giving the number of bytes in the string.  The second is that many
       bytes, and is the UTF-8 encoding of the Unicode string.
       """
 
-Docs.getdoc(::Val{FLOAT}) = """Newline-terminated decimal float literal.
+Docs.getdoc(::Val{FLOAT}) = md"""Newline-terminated decimal float literal.
 
       The argument is repr(a_float), and in general requires 17 significant
       digits for roundtrip conversion to be an identity (this is so for
@@ -251,7 +253,7 @@ Docs.getdoc(::Val{FLOAT}) = """Newline-terminated decimal float literal.
       is like that), but may do less damage than BINFLOAT on boxes with
       greater precision or dynamic range than IEEE-754 double.
       """
-Docs.getdoc(::Val{BINFLOAT}) = """Float stored in binary form, with 8 bytes of data.
+Docs.getdoc(::Val{BINFLOAT}) = md"""Float stored in binary form, with 8 bytes of data.
 
       This generally requires less than half the space of FLOAT encoding.
       In general, BINFLOAT cannot be used to transport infinities, NaNs, or
@@ -262,21 +264,21 @@ Docs.getdoc(::Val{BINFLOAT}) = """Float stored in binary form, with 8 bytes of d
       """
 
 Docs.getdoc(::Val{EMPTY_LIST}) = "Push an empty list."
-Docs.getdoc(::Val{APPEND}) = """Append an object to a list.
+Docs.getdoc(::Val{APPEND}) = md"""Append an object to a list.
 
       Stack before:  ... pylist anyobject
       Stack after:   ... pylist+[anyobject]
 
       although pylist is really extended in-place.
       """
-Docs.getdoc(::Val{APPENDS}) = """Extend a list by a slice of stack objects.
+Docs.getdoc(::Val{APPENDS}) = md"""Extend a list by a slice of stack objects.
 
       Stack before:  ... pylist markobject stackslice
       Stack after:   ... pylist+stackslice
 
       although pylist is really extended in-place.
       """
-Docs.getdoc(::Val{LIST}) = """Build a list out of the topmost stack slice, after markobject.
+Docs.getdoc(::Val{LIST}) = md"""Build a list out of the topmost stack slice, after markobject.
 
       All the stack entries following the topmost markobject are placed into
       a single Python list, which single list object replaces all of the
@@ -287,7 +289,7 @@ Docs.getdoc(::Val{LIST}) = """Build a list out of the topmost stack slice, after
       """
 
 Docs.getdoc(::Val{EMPTY_TUPLE}) = "Push an empty tuple."
-Docs.getdoc(::Val{TUPLE}) = """Build a tuple out of the topmost stack slice, after markobject.
+Docs.getdoc(::Val{TUPLE}) = md"""Build a tuple out of the topmost stack slice, after markobject.
 
       All the stack entries following the topmost markobject are placed into
       a single Python tuple, which single tuple object replaces all of the
@@ -296,7 +298,7 @@ Docs.getdoc(::Val{TUPLE}) = """Build a tuple out of the topmost stack slice, aft
       Stack before: ... markobject 1 2 3 'abc'
       Stack after:  ... (1, 2, 3, 'abc')
       """
-Docs.getdoc(::Val{TUPLE1}) = """Build a one-tuple out of the topmost item on the stack.
+Docs.getdoc(::Val{TUPLE1}) = md"""Build a one-tuple out of the topmost item on the stack.
 
       This code pops one value off the stack and pushes a tuple of
       length 1 whose one item is that value back onto it.  In other
@@ -304,7 +306,7 @@ Docs.getdoc(::Val{TUPLE1}) = """Build a one-tuple out of the topmost item on the
 
           stack[-1] = tuple(stack[-1:])
       """
-Docs.getdoc(::Val{TUPLE2}) = """Build a two-tuple out of the top two items on the stack.
+Docs.getdoc(::Val{TUPLE2}) = md"""Build a two-tuple out of the top two items on the stack.
 
       This code pops two values off the stack and pushes a tuple of
       length 2 whose items are those values back onto it.  In other
@@ -312,7 +314,7 @@ Docs.getdoc(::Val{TUPLE2}) = """Build a two-tuple out of the top two items on th
 
           stack[-2:] = [tuple(stack[-2:])]
       """
-Docs.getdoc(::Val{TUPLE3}) = """Build a three-tuple out of the top three items on the stack.
+Docs.getdoc(::Val{TUPLE3}) = md"""Build a three-tuple out of the top three items on the stack.
 
       This code pops three values off the stack and pushes a tuple of
       length 3 whose items are those values back onto it.  In other
@@ -322,7 +324,7 @@ Docs.getdoc(::Val{TUPLE3}) = """Build a three-tuple out of the top three items o
       """
 
 Docs.getdoc(::Val{EMPTY_DICT}) = "Push an empty dict."
-Docs.getdoc(::Val{DICT}) = """Build a dict out of the topmost stack slice, after markobject.
+Docs.getdoc(::Val{DICT}) = md"""Build a dict out of the topmost stack slice, after markobject.
 
       All the stack entries following the topmost markobject are placed into
       a single Python dict, which single dict object replaces all of the
@@ -332,14 +334,14 @@ Docs.getdoc(::Val{DICT}) = """Build a dict out of the topmost stack slice, after
       Stack before: ... markobject 1 2 3 'abc'
       Stack after:  ... {1: 2, 3: 'abc'}
       """
-Docs.getdoc(::Val{SETITEM}) = """Add a key+value pair to an existing dict.
+Docs.getdoc(::Val{SETITEM}) = md"""Add a key+value pair to an existing dict.
 
       Stack before:  ... pydict key value
       Stack after:   ... pydict
 
       where pydict has been modified via pydict[key] = value.
       """
-Docs.getdoc(::Val{SETITEMS}) = """Add an arbitrary number of key+value pairs to an existing dict.
+Docs.getdoc(::Val{SETITEMS}) = md"""Add an arbitrary number of key+value pairs to an existing dict.
 
       The slice of the stack following the topmost markobject is taken as
       an alternating sequence of keys and values, added to the dict
@@ -355,7 +357,7 @@ Docs.getdoc(::Val{SETITEMS}) = """Add an arbitrary number of key+value pairs to 
       """
 
 Docs.getdoc(::Val{EMPTY_SET}) = "Push an empty set."
-Docs.getdoc(::Val{ADDITEMS}) = """Add an arbitrary number of items to an existing set.
+Docs.getdoc(::Val{ADDITEMS}) = md"""Add an arbitrary number of items to an existing set.
 
       The slice of the stack following the topmost markobject is taken as
       a sequence of items, added to the set immediately under the topmost
@@ -369,7 +371,7 @@ Docs.getdoc(::Val{ADDITEMS}) = """Add an arbitrary number of items to an existin
       1, 2, ..., n, and in that order.
       """
 
-Docs.getdoc(::Val{FROZENSET}) = """Build a frozenset out of the topmost slice, after markobject.
+Docs.getdoc(::Val{FROZENSET}) = md"""Build a frozenset out of the topmost slice, after markobject.
 
       All the stack entries following the topmost markobject are placed into
       a single Python frozenset, which single frozenset object replaces all
@@ -381,58 +383,58 @@ Docs.getdoc(::Val{FROZENSET}) = """Build a frozenset out of the topmost slice, a
 
 Docs.getdoc(::Val{POP}) = "Discard the top stack item, shrinking the stack by one item."
 Docs.getdoc(::Val{DUP}) = "Push the top stack item onto the stack again, duplicating it."
-Docs.getdoc(::Val{MARK}) = """Push markobject onto the stack.
+Docs.getdoc(::Val{MARK}) = md"""Push markobject onto the stack.
 
       markobject is a unique object, used by other opcodes to identify a
       region of the stack containing a variable number of objects for them
       to work on.  See markobject.doc for more detail.
       """
-Docs.getdoc(::Val{POP_MARK}) = """Pop all the stack objects at and above the topmost markobject.
+Docs.getdoc(::Val{POP_MARK}) = md"""Pop all the stack objects at and above the topmost markobject.
 
       When an opcode using a variable number of stack objects is done,
       POP_MARK is used to remove those objects, and to remove the markobject
       that delimited their starting position on the stack.
       """
 
-Docs.getdoc(::Val{GET}) = """Read an object from the memo and push it on the stack.
+Docs.getdoc(::Val{GET}) = md"""Read an object from the memo and push it on the stack.
 
       The index of the memo object to push is given by the newline-terminated
       decimal string following.  BINGET and LONG_BINGET are space-optimized
       versions.
       """
-Docs.getdoc(::Val{BINGET}) = """Read an object from the memo and push it on the stack.
+Docs.getdoc(::Val{BINGET}) = md"""Read an object from the memo and push it on the stack.
 
       The index of the memo object to push is given by the 1-byte unsigned
       integer following.
       """
-Docs.getdoc(::Val{LONG_BINGET}) = """Read an object from the memo and push it on the stack.
+Docs.getdoc(::Val{LONG_BINGET}) = md"""Read an object from the memo and push it on the stack.
 
       The index of the memo object to push is given by the 4-byte unsigned
       little-endian integer following.
       """
-Docs.getdoc(::Val{PUT}) = """Store the stack top into the memo.  The stack is not popped.
+Docs.getdoc(::Val{PUT}) = md"""Store the stack top into the memo.  The stack is not popped.
 
       The index of the memo location to write into is given by the newline-
       terminated decimal string following.  BINPUT and LONG_BINPUT are
       space-optimized versions.
       """
-Docs.getdoc(::Val{BINPUT}) = """Store the stack top into the memo.  The stack is not popped.
+Docs.getdoc(::Val{BINPUT}) = md"""Store the stack top into the memo.  The stack is not popped.
 
       The index of the memo location to write into is given by the 1-byte
       unsigned integer following.
       """
-Docs.getdoc(::Val{LONG_BINPUT}) = """Store the stack top into the memo.  The stack is not popped.
+Docs.getdoc(::Val{LONG_BINPUT}) = md"""Store the stack top into the memo.  The stack is not popped.
 
       The index of the memo location to write into is given by the 4-byte
       unsigned little-endian integer following.
       """
-Docs.getdoc(::Val{MEMOIZE}) = """Store the stack top into the memo.  The stack is not popped.
+Docs.getdoc(::Val{MEMOIZE}) = md"""Store the stack top into the memo.  The stack is not popped.
 
       The index of the memo location to write is the number of
       elements currently present in the memo.
       """
 
-Docs.getdoc(::Val{EXT1}) = """Extension code.
+Docs.getdoc(::Val{EXT1}) = md"""Extension code.
 
       This code and the similar EXT2 and EXT4 allow using a registry
       of popular objects that are pickled by name, typically classes.
@@ -447,16 +449,16 @@ Docs.getdoc(::Val{EXT1}) = """Extension code.
       EXT1 has a 1-byte integer argument.  This is used to index into the
       extension registry, and the object at that index is pushed on the stack.
       """
-Docs.getdoc(::Val{EXT2}) = """Extension code.
+Docs.getdoc(::Val{EXT2}) = md"""Extension code.
 
       See EXT1.  EXT2 has a two-byte integer argument.
       """
-Docs.getdoc(::Val{EXT4}) = """Extension code.
+Docs.getdoc(::Val{EXT4}) = md"""Extension code.
 
       See EXT1.  EXT4 has a four-byte integer argument.
       """
 
-Docs.getdoc(::Val{GLOBAL}) = """Push a global object (module.attr) on the stack.
+Docs.getdoc(::Val{GLOBAL}) = md"""Push a global object (module.attr) on the stack.
 
       Two newline-terminated strings follow the GLOBAL opcode.  The first is
       taken as a module name, and the second as a class name.  The class
@@ -466,7 +468,7 @@ Docs.getdoc(::Val{GLOBAL}) = """Push a global object (module.attr) on the stack.
       """
 Docs.getdoc(::Val{STACK_GLOBAL}) = "Push a global object (module.attr) on the stack."
 
-Docs.getdoc(::Val{REDUCE}) = """Push an object built from a callable and an argument tuple.
+Docs.getdoc(::Val{REDUCE}) = md"""Push an object built from a callable and an argument tuple.
 
       The opcode is named to remind of the __reduce__() method.
 
@@ -488,7 +490,7 @@ Docs.getdoc(::Val{REDUCE}) = """Push an object built from a callable and an argu
       why it does this, but I've sure seen this complaint often enough when
       I didn't want to <wink>.
       """
-Docs.getdoc(::Val{BUILD}) = """Finish building an object, via __setstate__ or dict update.
+Docs.getdoc(::Val{BUILD}) = md"""Finish building an object, via __setstate__ or dict update.
 
       Stack before: ... anyobject argument
       Stack after:  ... anyobject
@@ -506,7 +508,7 @@ Docs.getdoc(::Val{BUILD}) = """Finish building an object, via __setstate__ or di
 
           anyobject.__dict__.update(argument)
       """
-Docs.getdoc(::Val{INST}) = """Build a class instance.
+Docs.getdoc(::Val{INST}) = md"""Build a class instance.
 
       This is the protocol 0 version of protocol 1's OBJ opcode.
       INST is followed by two newline-terminated strings, giving a
@@ -548,7 +550,7 @@ Docs.getdoc(::Val{INST}) = """Build a class instance.
       NOTE:  the distinction between old-style and new-style classes does
              not make sense in Python 3.
       """
-Docs.getdoc(::Val{OBJ}) = """Build a class instance.
+Docs.getdoc(::Val{OBJ}) = md"""Build a class instance.
 
       This is the protocol 1 version of protocol 0's INST opcode, and is
       very much like it.  The major difference is that the class object
@@ -573,7 +575,7 @@ Docs.getdoc(::Val{OBJ}) = """Build a class instance.
       get the class object.  That was always the intent; the implementations
       had diverged for accidental reasons.
       """
-Docs.getdoc(::Val{NEWOBJ}) = """Build an object instance.
+Docs.getdoc(::Val{NEWOBJ}) = md"""Build an object instance.
 
       The stack before should be thought of as containing a class
       object followed by an argument tuple (the tuple being the stack
@@ -581,7 +583,7 @@ Docs.getdoc(::Val{NEWOBJ}) = """Build an object instance.
       and the value returned by cls.__new__(cls, *args) is pushed back
       onto the stack.
       """
-Docs.getdoc(::Val{NEWOBJ_EX}) = """Build an object instance.
+Docs.getdoc(::Val{NEWOBJ_EX}) = md"""Build an object instance.
 
       The stack before should be thought of as containing a class
       object followed by an argument tuple and by a keyword argument dict
@@ -590,25 +592,25 @@ Docs.getdoc(::Val{NEWOBJ_EX}) = """Build an object instance.
       cls.__new__(cls, *args, *kwargs) is  pushed back  onto the stack.
       """
 
-Docs.getdoc(::Val{PROTO}) = """Protocol version indicator.
+Docs.getdoc(::Val{PROTO}) = md"""Protocol version indicator.
 
       For protocol 2 and above, a pickle must start with this opcode.
       The argument is the protocol version, an int in range(2, 256).
       """
-Docs.getdoc(::Val{STOP}) = """Stop the unpickling machine.
+Docs.getdoc(::Val{STOP}) = md"""Stop the unpickling machine.
 
       Every pickle ends with this opcode.  The object at the top of the stack
       is popped, and that's the result of unpickling.  The stack should be
       empty then.
       """
 
-Docs.getdoc(::Val{FRAME}) = """Indicate the beginning of a new frame.
+Docs.getdoc(::Val{FRAME}) = md"""Indicate the beginning of a new frame.
 
       The unpickler may use this opcode to safely prefetch data from its
       underlying stream.
       """
 
-Docs.getdoc(::Val{PERSID}) = """Push an object identified by a persistent ID.
+Docs.getdoc(::Val{PERSID}) = md"""Push an object identified by a persistent ID.
 
       The pickle module doesn't define what a persistent ID means.  PERSID's
       argument is a newline-terminated str-style (no embedded escapes, no
@@ -618,7 +620,7 @@ Docs.getdoc(::Val{PERSID}) = """Push an object identified by a persistent ID.
       of persistent_load() in Python's unpickler:  it must be supplied by an
       unpickler subclass.
       """
-Docs.getdoc(::Val{BINPERSID}) = """Push an object identified by a persistent ID.
+Docs.getdoc(::Val{BINPERSID}) = md"""Push an object identified by a persistent ID.
 
       Like PERSID, except the persistent ID is popped off the stack (instead
       of being a string embedded in the opcode bytestream).  The persistent

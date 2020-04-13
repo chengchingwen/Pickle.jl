@@ -5,8 +5,8 @@ if VERSION < v"1.1"
     isnothing(::Any) = false
 end
 
-include("readarg.jl")
+include("./readarg.jl")
 include("./opcode.jl")
-
+include("./unpickle.jl")
 
 end # module

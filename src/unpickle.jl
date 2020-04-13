@@ -15,10 +15,10 @@ end
 
 
 function execute!(upkr::UnPickler, op::OpCode, io::IO)
-  argf = argument(opcode)
+  argf = argument(op)
   arg = isnothing(argf) ? nothing : argf(io)
 
-  execute!(uplr, Val(op), arg)
+  execute!(upkr, Val(op), arg)
 end
 
 execute!(upkr::UnPickler, ::Val{INT}, arg) = push!(upkr.stack, arg)
@@ -60,14 +60,14 @@ function execute!(upkr::UnPickler, ::Val{APPENDS}, arg)
   append!(upkr.stack[end], items)
 end
 
-function execute!(upkr::UnPickler, ::Val{LIST}, arg) =
+function execute!(upkr::UnPickler, ::Val{LIST}, arg)
   items = pop_mark!(upkr)
   push!(upkr.stack, items)
 end
 
 execute!(upkr::UnPickler, ::Val{EMPTY_TUPLE}, arg) = push!(upkr.stack, ())
 
-function execute!(upkr::UnPickler, ::Val{TUPLE}, arg) =
+function execute!(upkr::UnPickler, ::Val{TUPLE}, arg)
   items = Tuple(pop_mark!(upkr))
   push!(upkr.stack, items)
 end
@@ -157,7 +157,9 @@ end
 # execute!(upkr::UnPickler, ::Val{NEWOBJ_EX}, arg) = nothing
 
 
-execute!(upkr::UnPickler, ::Val{PROTO}, arg) = setfield!(uplr. :proto, arg)
+function execute!(upkr::UnPickler, ::Val{PROTO}, arg)
+  upkr.proto = arg
+end
 function execute!(upkr::UnPickler, ::Val{STOP}, arg)
   pop!(upkr.stack)
 end
@@ -175,7 +177,7 @@ function load(upkr::UnPickler, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)
 
-    value = execute!(upkr, op, arg)
+    value = execute!(upkr, opcode, io)
 
     isequal(STOP)(opcode) && return value
   end

@@ -1,5 +1,5 @@
 """
-read 1 bytes as `UInt8` from io.
+read 1 byte as `UInt8` from `io`.
 
 # Examples
 
@@ -12,6 +12,8 @@ julia> Pickle.read_uint1(IOBuffer(b"\\xff"))
 read_uint1(io::IO) = read(io, UInt8)
 
 """
+read 2 bytes as `UInt16` from `io`.
+
 # Examples
 ```jldoctest
 julia> Pickle.read_uint2(IOBuffer(b"\\xff\\x00"))
@@ -24,6 +26,8 @@ julia> Pickle.read_uint2(IOBuffer(b"\\xff\\xff"))
 read_uint2(io::IO) = read(io, UInt16)
 
 """
+read 4 bytes as `Int32` from `io`.
+
 # Examples
 ```jldoctest
 julia> Pickle.read_int4(IOBuffer(b"\\xff\\x00\\x00\\x00"))
@@ -36,6 +40,8 @@ true
 read_int4(io::IO) = read(io, Int32)
 
 """
+read 4 bytes as `UInt32` from `io`.
+
 # Examples
 ```jldoctest
 julia> Pickle.read_uint4(IOBuffer(b"\\xff\\x00\\x00\\x00"))
@@ -48,6 +54,8 @@ true
 read_uint4(io::IO) = read(io, UInt32)
 
 """
+read 8 bytes as `UInt64` from `io`.
+
 # Examples
 ```jldoctest
 julia> Pickle.read_uint8(IOBuffer(b"\\xff\\x00\\x00\\x00\\x00\\x00\\x00\\x00"))
@@ -60,6 +68,8 @@ true
 read_uint8(io::IO) = read(io, UInt64)
 
 """
+read a string with quotes end with "\\n" (newline) from `io`.
+
 # Examples
 ```jldoctest
 julia> Pickle.read_stringnl(IOBuffer(b"'abcd'\\nefg\\n"))
@@ -106,6 +116,8 @@ end
 read_stringnl_noescape(io::IO) = read_stringnl(io, stripquotes=false)
 
 """
+read a pair of unescape string from `io`.
+
 # Examples
 ```jldoctest
 julia> Pickle.read_stringnl_noescape_pair(IOBuffer(b"Queue\\nEmpty\\njunk"))
@@ -123,6 +135,8 @@ end
 read_multiple(io::IO, T::Type, name::String, nf::Function) = T(read_multiple(io, name, nf))
 
 """
+read 1 byte as `UInt8` for length n and read n bytes as `String` from `io`.`
+
 # Examples
 ```jldoctest
 julia> Pickle.read_string1(IOBuffer(b"\\x00"))

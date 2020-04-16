@@ -7,6 +7,8 @@ end
 
 include("./readarg.jl")
 include("./opcode.jl")
+using .OpCodes
+
 include("./unpickle.jl")
 
 end # module

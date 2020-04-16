@@ -13,7 +13,6 @@ function pop_mark!(upkr::UnPickler)
   return item
 end
 
-
 function execute!(upkr::UnPickler, op::OpCode, io::IO)
   argf = argument(op)
   arg = isnothing(argf) ? nothing : argf(io)
@@ -21,83 +20,83 @@ function execute!(upkr::UnPickler, op::OpCode, io::IO)
   execute!(upkr, Val(op), arg)
 end
 
-execute!(upkr::UnPickler, ::Val{INT}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BININT}, arg) = push!(upkr.stack, Int(arg))
-execute!(upkr::UnPickler, ::Val{BININT1}, arg) = push!(upkr.stack, Int(arg))
-execute!(upkr::UnPickler, ::Val{BININT2}, arg) = push!(upkr.stack, Int(arg))
-execute!(upkr::UnPickler, ::Val{LONG}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{LONG1}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{LONG4}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{STRING}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BINSTRING}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{SHORT_BINSTRING}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BINBYTES}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{SHORT_BINBYTES}, arg) = read_bytes1
-execute!(upkr::UnPickler, ::Val{BINBYTES8}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BYTEARRAY8}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.INT}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BININT}, arg) = push!(upkr.stack, Int(arg))
+execute!(upkr::UnPickler, ::Val{OpCodes.BININT1}, arg) = push!(upkr.stack, Int(arg))
+execute!(upkr::UnPickler, ::Val{OpCodes.BININT2}, arg) = push!(upkr.stack, Int(arg))
+execute!(upkr::UnPickler, ::Val{OpCodes.LONG}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.LONG1}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.LONG4}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.STRING}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BINSTRING}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.SHORT_BINSTRING}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BINBYTES}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.SHORT_BINBYTES}, arg) = read_bytes1
+execute!(upkr::UnPickler, ::Val{OpCodes.BINBYTES8}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BYTEARRAY8}, arg) = push!(upkr.stack, arg)
 
-# execute!(upkr::UnPickler, ::Val{NEXT_BUFFER}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{READONLY_BUFFER}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.NEXT_BUFFER}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.READONLY_BUFFER}, arg) = nothing
 
-execute!(upkr::UnPickler, ::Val{NONE}, arg) = push!(upkr.stack, nothing)
-execute!(upkr::UnPickler, ::Val{NEWTRUE}, arg) = push!(upkr.stack, true)
-execute!(upkr::UnPickler, ::Val{NEWFALSE}, arg) = push!(upkr.stack, false)
-execute!(upkr::UnPickler, ::Val{UNICODE}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{SHORT_BINUNICODE}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BINUNICODE}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BINUNICODE8}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{FLOAT}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{BINFLOAT}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{EMPTY_LIST}, arg) = push!(upkr.stack, [])
+execute!(upkr::UnPickler, ::Val{OpCodes.NONE}, arg) = push!(upkr.stack, nothing)
+execute!(upkr::UnPickler, ::Val{OpCodes.NEWTRUE}, arg) = push!(upkr.stack, true)
+execute!(upkr::UnPickler, ::Val{OpCodes.NEWFALSE}, arg) = push!(upkr.stack, false)
+execute!(upkr::UnPickler, ::Val{OpCodes.UNICODE}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.SHORT_BINUNICODE}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BINUNICODE}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BINUNICODE8}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.FLOAT}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.BINFLOAT}, arg) = push!(upkr.stack, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_LIST}, arg) = push!(upkr.stack, [])
 
-function execute!(upkr::UnPickler, ::Val{APPEND}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.APPEND}, arg)
   value = pop!(upkr.stack)
   push!(upkr.stack[end], value)
 end
 
-function execute!(upkr::UnPickler, ::Val{APPENDS}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.APPENDS}, arg)
   items = pop_mark!(upkr)
   append!(upkr.stack[end], items)
 end
 
-function execute!(upkr::UnPickler, ::Val{LIST}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.LIST}, arg)
   items = pop_mark!(upkr)
   push!(upkr.stack, items)
 end
 
-execute!(upkr::UnPickler, ::Val{EMPTY_TUPLE}, arg) = push!(upkr.stack, ())
+execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_TUPLE}, arg) = push!(upkr.stack, ())
 
-function execute!(upkr::UnPickler, ::Val{TUPLE}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE}, arg)
   items = Tuple(pop_mark!(upkr))
   push!(upkr.stack, items)
 end
 
-execute!(upkr::UnPickler, ::Val{TUPLE1}, arg) = upkr.stack[end] = (upkr.stack[end],)
-function execute!(upkr::UnPickler, ::Val{TUPLE2}, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE1}, arg) = upkr.stack[end] = (upkr.stack[end],)
+function execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE2}, arg)
   r = pop!(upkr.stack)
   upkr.stack[end] = (upkr.stack[end], r)
 end
-function execute!(upkr::UnPickler, ::Val{TUPLE3}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE3}, arg)
   r = pop!(upkr.stack)
   m = pop!(upkr.stack)
   upkr.stack[end] = (upkr.stack[end], m, r)
 end
-execute!(upkr::UnPickler, ::Val{EMPTY_DICT}, arg) = push!(upkr.stack, Dict())
+execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_DICT}, arg) = push!(upkr.stack, Dict())
 
 
-function execute!(upkr::UnPickler, ::Val{DICT}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.DICT}, arg)
   items = pop_mark!(upkr)
   push!(upkr.stack, Dict(items[i]=>items[i+1] for i = 1:2:length(items)))
 end
 
-function execute!(upkr::UnPickler, ::Val{SETITEM}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.SETITEM}, arg)
   value = pop!(upkr.stack)
   key = pop!(upkr.stack)
   dict = upkr.stack[end]
   dict[key] = value
 end
 
-function execute!(upkr::UnPickler, ::Val{SETITEMS}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.SETITEMS}, arg)
   items = pop_mark!(upkr)
   dict = upkr.stack[end]
   for i in 1:2:length(items)
@@ -105,9 +104,9 @@ function execute!(upkr::UnPickler, ::Val{SETITEMS}, arg)
   end
 end
 
-execute!(upkr::UnPickler, ::Val{EMPTY_SET}, arg) = push!(upkr.stack, Set())
+execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_SET}, arg) = push!(upkr.stack, Set())
 
-function execute!(upkr::UnPickler, ::Val{ADDITEMS}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.ADDITEMS}, arg)
   items = pop_mark!(upkr)
   obj = upkr.stack[end]
   for item in items
@@ -115,59 +114,59 @@ function execute!(upkr::UnPickler, ::Val{ADDITEMS}, arg)
   end
 end
 
-execute!(upkr::UnPickler, ::Val{FROZENSET}, arg) = execute!(upkr, Val(EMPTY_SET), arg)
-execute!(upkr::UnPickler, ::Val{POP}, arg) = isempty(upkr.stack) ? pop!(upkr.stack) : pop_mark!(upkr)
-execute!(upkr::UnPickler, ::Val{DUP}, arg) = push!(upkr.stack, upkr.stack[end])
-function execute!(upkr::UnPickler, ::Val{MARK}, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.FROZENSET}, arg) = execute!(upkr, Val(EMPTY_SET), arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.POP}, arg) = isempty(upkr.stack) ? pop!(upkr.stack) : pop_mark!(upkr)
+execute!(upkr::UnPickler, ::Val{OpCodes.DUP}, arg) = push!(upkr.stack, upkr.stack[end])
+function execute!(upkr::UnPickler, ::Val{OpCodes.MARK}, arg)
   push!(upkr.metastack, upkr.stack)
   upkr.stack = []
 end
-function execute!(upkr::UnPickler, ::Val{POP_MARK}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.POP_MARK}, arg)
   pop_mark!(upkr)
 end
 
-execute!(upkr::UnPickler, ::Val{GET}, arg) = push!(upkr.stack, upkr.memo[arg])
-execute!(upkr::UnPickler, ::Val{BINGET}, arg) = push!(upkr.stack, upkr.memo[arg])
-execute!(upkr::UnPickler, ::Val{LONG_BINGET}, arg) = push!(upkr.stack, upkr.memo[Int(arg)])
+execute!(upkr::UnPickler, ::Val{OpCodes.GET}, arg) = push!(upkr.stack, upkr.memo[arg])
+execute!(upkr::UnPickler, ::Val{OpCodes.BINGET}, arg) = push!(upkr.stack, upkr.memo[arg])
+execute!(upkr::UnPickler, ::Val{OpCodes.LONG_BINGET}, arg) = push!(upkr.stack, upkr.memo[Int(arg)])
 
-function execute!(upkr::UnPickler, ::Val{PUT}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.PUT}, arg)
   upkr.memo[arg] = upkr.stack[end]
 end
-function execute!(upkr::UnPickler, ::Val{BINPUT}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.BINPUT}, arg)
   upkr.memo[arg] = upkr.stack[end]
 end
-function execute!(upkr::UnPickler, ::Val{LONG_BINPUT}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.LONG_BINPUT}, arg)
   upkr.memo[arg] = upkr.stack[end]
 end
-function execute!(upkr::UnPickler, ::Val{MEMOIZE}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.MEMOIZE}, arg)
   upkr.memo[length(upkr.memo)] = upkr.stack[end]
 end
 
 
-# execute!(upkr::UnPickler, ::Val{EXT1}, arg) = read_uint1
-# execute!(upkr::UnPickler, ::Val{EXT2}, arg) = read_uint2
-# execute!(upkr::UnPickler, ::Val{EXT4}, arg) = read_int4
-# execute!(upkr::UnPickler, ::Val{GLOBAL}, arg) = read_stringnl_noescape_pair
-# execute!(upkr::UnPickler, ::Val{STACK_GLOBAL}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{REDUCE}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{BUILD}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{INST}, arg) = read_stringnl_noescape_pair
-# execute!(upkr::UnPickler, ::Val{OBJ}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{NEWOBJ}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{NEWOBJ_EX}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.EXT1}, arg) = read_uint1
+# execute!(upkr::UnPickler, ::Val{OpCodes.EXT2}, arg) = read_uint2
+# execute!(upkr::UnPickler, ::Val{OpCodes.EXT4}, arg) = read_int4
+# execute!(upkr::UnPickler, ::Val{OpCodes.GLOBAL}, arg) = read_stringnl_noescape_pair
+# execute!(upkr::UnPickler, ::Val{OpCodes.STACK_GLOBAL}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.REDUCE}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.BUILD}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.INST}, arg) = read_stringnl_noescape_pair
+# execute!(upkr::UnPickler, ::Val{OpCodes.OBJ}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ}, arg) = nothing
+# execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ_EX}, arg) = nothing
 
 
-function execute!(upkr::UnPickler, ::Val{PROTO}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.PROTO}, arg)
   upkr.proto = arg
 end
-function execute!(upkr::UnPickler, ::Val{STOP}, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.STOP}, arg)
   pop!(upkr.stack)
 end
 
-# execute!(upkr::UnPickler, ::Val{FRAME}, arg) = read_uint8
+# execute!(upkr::UnPickler, ::Val{OpCodes.FRAME}, arg) = read_uint8
 
-execute!(upkr::UnPickler, ::Val{PERSID}, arg) = push!(upkr.stack, arg)
-function execute!(upkr::UnPickler, ::Val{BINPERSID}, arg)
+execute!(upkr::UnPickler, ::Val{OpCodes.PERSID}, arg) = push!(upkr.stack, arg)
+function execute!(upkr::UnPickler, ::Val{OpCodes.BINPERSID}, arg)
   pid = pop!(upkr.stack)
   x = persistent_load(upkr, pid)
   push!(upkr.stack, x)

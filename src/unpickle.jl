@@ -14,7 +14,7 @@ function pop_mark!(upkr::UnPickler)
 end
 
 function execute!(upkr::UnPickler, op::OpCode, io::IO)
-  argf = argument(op)
+  argf = OpCodes.argument(op)
   arg = isnothing(argf) ? nothing : argf(io)
 
   execute!(upkr, Val(op), arg)
@@ -172,12 +172,14 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.BINPERSID}, arg)
   push!(upkr.stack, x)
 end
 
+persistent_load(::UnPickler, pid) = error("unsupported persistent id encountered")
+
 function load(upkr::UnPickler, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)
 
     value = execute!(upkr, opcode, io)
 
-    isequal(STOP)(opcode) && return value
+    isequal(OpCodes.STOP)(opcode) && return value
   end
 end

@@ -332,6 +332,33 @@ julia> Pickle.read_float8(IOBuffer(b"\\xbf\\xf4\\x00\\x00\\x00\\x00\\x00\\x00\\n
 """
 read_float8(io::IO) = bswap(read(io, Float64))
 
+"""
+convert a 2's complement byte array (Vector{UInt8}) into Signed Integer.
+
+# Examples
+```jldoctest
+julia> Pickle.int_from_bytes(b"")
+0
+
+julia> Pickle.int_from_bytes(b"\\xff\\x00")
+255
+
+julia> Pickle.int_from_bytes(b"\\xff\\x7f")
+32767
+
+julia> Pickle.int_from_bytes(b"\\x00\\xff")
+-256
+
+julia> Pickle.int_from_bytes(b"\\x00\\x80")
+-32768
+
+julia> Pickle.int_from_bytes(b"\\x80")
+-128
+
+julia> Pickle.int_from_bytes(b"\\x7f")
+127
+```
+"""
 function int_from_bytes(x)
     isempty(x) && return 0
     islittle = Base.ENDIAN_BOM == 0x04030201

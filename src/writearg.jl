@@ -46,6 +46,10 @@ function int_to_bytes(x)
   hexstr = x > 0 ? string(x; base=16) : string(-x; base=16)
   if length(hexstr) |> isodd
     hexstr = lpad(hexstr, length(hexstr)+1, '0')
+  else
+    if !(first(hexstr) < '8')
+      hexstr = lpad(hexstr, length(hexstr)+2, '0')
+    end
   end
 
   bytes = hex2bytes(hexstr)

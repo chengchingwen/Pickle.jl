@@ -113,7 +113,7 @@ function _save(pklr::Pickler, io::IO, data::Integer)
   if protocal(pklr) >= 2
     bytes = Pickle.int_to_bytes(data)
     n = length(bytes)
-    if m < 256
+    if n < 256
       write(io, OpCodes.LONG1)
       Pickle.write_uint1(io, n)
     else

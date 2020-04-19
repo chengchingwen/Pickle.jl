@@ -174,6 +174,7 @@ end
 
 persistent_load(::UnPickler, pid) = error("unsupported persistent id encountered")
 
+load(io::IO) = load(UnPickler(), io)
 function load(upkr::UnPickler, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)
@@ -183,3 +184,6 @@ function load(upkr::UnPickler, io::IO)
     isequal(OpCodes.STOP)(opcode) && return value
   end
 end
+
+loads(s) = loads(UnPickler(), s)
+loads(upkr::UnPickler, s) = load(upkr, IOBuffer(s))

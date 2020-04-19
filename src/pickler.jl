@@ -328,7 +328,7 @@ function _save(pklr::Pickler, io::IO, data::Set)
   end
 end
 
-
+dump(io::IO, data) = dump(Pickler(), io, data)
 function dump(pklr::Pickler, io::IO, data)
   if protocal(pklr) >= 2
     write(io, OpCodes.PROTO)
@@ -338,3 +338,6 @@ function dump(pklr::Pickler, io::IO, data)
   write(io, OpCodes.STOP)
   io
 end
+
+dumps(data) = dumps(Pickler(), data)
+dumps(pklr::Pickler, data) = sprint((io, data)->dump(pklr, io, data), data)

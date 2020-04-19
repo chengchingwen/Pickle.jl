@@ -226,7 +226,7 @@ function batch_appends(pklr::Pickler, io::IO, data)
   if !isbinary(pklr)
     for x in data
       save(pklr, io, x)
-      wrtie(io, OpCodes.APPEND)
+      write(io, OpCodes.APPEND)
     end
     return
   end

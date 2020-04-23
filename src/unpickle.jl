@@ -3,9 +3,12 @@ mutable struct UnPickler
   stack::Vector
   metastack::Vector
   proto::Int
+  defer::Bool
 end
 
-UnPickler(memo=Dict()) = UnPickler(memo, [], [], 4)
+UnPickler(memo=Dict(); defer=true) = UnPickler(memo, [], [], 4, defer)
+
+const mt_table = Dict()
 
 function pop_mark!(upkr::UnPickler)
   item = upkr.stack
@@ -146,15 +149,150 @@ end
 # execute!(upkr::UnPickler, ::Val{OpCodes.EXT1}, arg) = read_uint1
 # execute!(upkr::UnPickler, ::Val{OpCodes.EXT2}, arg) = read_uint2
 # execute!(upkr::UnPickler, ::Val{OpCodes.EXT4}, arg) = read_int4
-# execute!(upkr::UnPickler, ::Val{OpCodes.GLOBAL}, arg) = read_stringnl_noescape_pair
-# execute!(upkr::UnPickler, ::Val{OpCodes.STACK_GLOBAL}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{OpCodes.REDUCE}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{OpCodes.BUILD}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{OpCodes.INST}, arg) = read_stringnl_noescape_pair
-# execute!(upkr::UnPickler, ::Val{OpCodes.OBJ}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ}, arg) = nothing
-# execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ_EX}, arg) = nothing
 
+struct Defer{F}
+  f::F
+end
+
+_get(def::Defer) = def.f()
+_get(x) = x
+_get(arr::Union{Array, Tuple, NTuple}) = isdefer(arr) ? map(_get, arr) : arr
+_get(p::Pair) = isdefer(p) ? _get(p[0])=>_get(p[1]) : p
+_get(dict::Dict) = isdefer(dict) ? Dict(_get(k)=>_get(v) for (k, v) in dict) : dict
+
+(def::Defer)() = _get(def)
+
+isdefer(::Defer) = true
+isdefer(x) = false
+isdefer(arr::Union{Array, Tuple, NTuple}) = any(isdefer, arr)
+isdefer(p::Pair) = isdefer(p[1]) || isdefer(p[2])
+isdefer(dict::Dict) = any(isdefer, pairs(dict))
+
+function _defer(md, fn, defer)
+  @info "loading $(md).$(fn)"
+  return function (args...; kwargs...)
+    global mt_table
+    @info "calling $(md).$(fn)($(join(args, ", ")); $(join(kwargs, ", ")))"
+    real_fn = get(mt_table, (md, fn), nothing)
+    if isnothing(real_fn)
+      if defer
+        @info "$(md).$(fn) is not defined in `mt_table`. deferring function call."
+        return (() -> mt_table[(md, fn)](args..., kwargs...)) |> Defer
+      else
+        error("$(md).$(fn) is not defined in `mt_table`.")
+      end
+    else
+      return real_fn(args...; kwargs...)
+    end
+  end
+end
+
+execute!(upkr::UnPickler, ::Val{OpCodes.GLOBAL}, arg) = push!(upkr.stack, _defer(arg..., upkr.defer))
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.STACK_GLOBAL}, arg)
+  fn = pop!(upkr.stack)
+  md = pop!(upkr.stack)
+  push!(upkr.stack, _defer(md, fn, upkr.defer))
+end
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.REDUCE}, arg)
+  args = pop!(upkr.stack)
+  fn = upkr.stack[end]
+  @info "reducing $fn with $args"
+  if isdefer(fn) || isdefer(args)
+    @info "deferring reduce"
+    upkr.stack[end] = (() -> _get(fn)(_get(args)...)) |> Defer
+  else
+    upkr.stack[end] = fn(args...)
+  end
+end
+
+function setstate! end
+
+# this is very likely to break
+function _build!(inst, state)
+  if applicable(setstate!, inst)
+    return setstate!(inst, state)
+  else
+    if state isa Tuple && length(state) == 2
+      state, slotstate = state
+    else
+      slotstate = nothing
+    end
+
+    if !isnothing(state)
+      for (k, v) in pairs(state)
+        setfield!(inst, Symbol(k), v)
+      end
+    end
+
+    if !isnothing(slotstate)
+      for (k, v) in pairs(slotstate)
+        setfield!(inst, Symbol(k), v)
+      end
+    end
+    return inst
+  end
+end
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.BUILD}, arg)
+  state = pop!(upkr.stack)
+  inst = upkr.stack[end]
+  @info "building $inst with $state"
+  if isdefer(inst) || isdefer(state)
+    @info "deferring build"
+    return (()-> _build!(_get(inst), _get(state))) |> Defer
+  else
+    return _build!(inst, state)
+  end
+end
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.INST}, arg)
+  init = _defer(arg..., upkr.defer)
+  args = pop_mark!(upkr)
+  @info "instantiatiating $init with $args"
+  push!(upkr.stack, init(args...))
+end
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.OBJ}, arg)
+  args = pop_mark!(upkr)
+  init = pop!(upkr.stack)
+  @info "instantiatiating $init with $args"
+  if isdefer(init) || isdefer(args)
+    @info "deferring instantiatiate"
+    push!(upkr.stack,
+          (()->_get(init)(_get(args)...)) |> Defer)
+  else
+    push!(upkr.stack, init(args...))
+  end
+end
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ}, arg)
+  args = pop!(upkr.stack)
+  init = pop!(upkr.stack)
+  @info "new object $init with $args"
+  if isdefer(init) || isdefer(args)
+    @info "deferring new"
+    push!(upkr.stack,
+          (()->_get(init)(_get(args)...)) |> Defer)
+  else
+    push!(upkr.stack, init(args...))
+  end
+end
+
+function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ_EX}, arg)
+  kwargs = pop!(upkr.stack)
+  args = pop!(upkr.stack)
+  init = pop!(upkr.stack)
+  @info "new object $init with $args and $kwargs"
+  if isdefer(init) || isdefer(args)
+    @info "deferring new"
+    push!(upkr.stack,
+          (()->_get(init)(_get(args)...; _get(kwargs)...)) |> Defer)
+  else
+    push!(upkr.stack, init(args...; kwargs...))
+  end
+end
 
 function execute!(upkr::UnPickler, ::Val{OpCodes.PROTO}, arg)
   upkr.proto = arg

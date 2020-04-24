@@ -34,7 +34,7 @@ execute!(upkr::UnPickler, ::Val{OpCodes.STRING}, arg) = push!(upkr.stack, arg)
 execute!(upkr::UnPickler, ::Val{OpCodes.BINSTRING}, arg) = push!(upkr.stack, arg)
 execute!(upkr::UnPickler, ::Val{OpCodes.SHORT_BINSTRING}, arg) = push!(upkr.stack, arg)
 execute!(upkr::UnPickler, ::Val{OpCodes.BINBYTES}, arg) = push!(upkr.stack, arg)
-execute!(upkr::UnPickler, ::Val{OpCodes.SHORT_BINBYTES}, arg) = read_bytes1
+execute!(upkr::UnPickler, ::Val{OpCodes.SHORT_BINBYTES}, arg) = push!(upkr.stack, arg)
 execute!(upkr::UnPickler, ::Val{OpCodes.BINBYTES8}, arg) = push!(upkr.stack, arg)
 execute!(upkr::UnPickler, ::Val{OpCodes.BYTEARRAY8}, arg) = push!(upkr.stack, arg)
 

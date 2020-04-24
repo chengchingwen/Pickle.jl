@@ -218,7 +218,7 @@ function setstate! end
 # this is very likely to break
 function _build!(inst, state)
   @info "building"
-  if applicable(setstate!, inst)
+  if applicable(setstate!, inst, state)
     return setstate!(inst, state)
   else
     if state isa Tuple && length(state) == 2

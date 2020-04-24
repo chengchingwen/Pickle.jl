@@ -188,21 +188,9 @@ end
 
 function _defer(md, fn, defer)
   @info "loading $(md).$(fn)"
-  return function (args...; kwargs...)
-    global mt_table
-    @info "calling $(md).$(fn)($(join(args, ", ")); $(join(kwargs, ", ")))"
-    real_fn = get(mt_table, (md, fn), nothing)
-    if isnothing(real_fn)
-      if defer
-        @warn "$(md).$(fn) is not defined in `mt_table`. deferring function call."
-        return @defer join((md, fn), '.') mt_table[(md, fn)](args..., kwargs...)
-      else
-        error("$(md).$(fn) is not defined in `mt_table`.")
-      end
-    else
-      return real_fn(args...; kwargs...)
-    end
-  end
+  global mt_table
+  real_fn = get(mt_table, (md, fn), nothing)
+  return DeferFunc(real_fn, md, fn, defer)
 end
 
 execute!(upkr::UnPickler, ::Val{OpCodes.GLOBAL}, arg) = push!(upkr.stack, _defer(arg..., upkr.defer))

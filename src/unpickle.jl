@@ -308,7 +308,9 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.STOP}, arg)
   pop!(upkr.stack)
 end
 
-# execute!(upkr::UnPickler, ::Val{OpCodes.FRAME}, arg) = read_uint8
+# TODO: buffering
+# `arg` from `read_uint8`
+execute!(upkr::UnPickler, ::Val{OpCodes.FRAME}, arg) = nothing
 
 execute!(upkr::UnPickler, ::Val{OpCodes.PERSID}, arg) = push!(upkr.stack, arg)
 function execute!(upkr::UnPickler, ::Val{OpCodes.BINPERSID}, arg)

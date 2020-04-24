@@ -54,12 +54,22 @@ execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_LIST}, arg) = push!(upkr.stack, []
 
 function execute!(upkr::UnPickler, ::Val{OpCodes.APPEND}, arg)
   value = pop!(upkr.stack)
-  push!(upkr.stack[end], value)
+  obj = upkr.stack[end]
+  if isdefer(obj)
+    upkr.stack[end] = @defer string("append ", obj) push!(_get(obj), _get(value))
+  else
+    push!(obj, value)
+  end
 end
 
 function execute!(upkr::UnPickler, ::Val{OpCodes.APPENDS}, arg)
   items = pop_mark!(upkr)
-  append!(upkr.stack[end], items)
+  obj = upkr.stack[end]
+  if isdefer(obj)
+    upkr.stack[end] = @defer string("appends ", obj) append!(_get(obj), _get(items))
+  else
+    append!(obj, items)
+  end
 end
 
 function execute!(upkr::UnPickler, ::Val{OpCodes.LIST}, arg)
@@ -75,17 +85,19 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE}, arg)
 end
 
 execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE1}, arg) = upkr.stack[end] = (upkr.stack[end],)
+
 function execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE2}, arg)
   r = pop!(upkr.stack)
   upkr.stack[end] = (upkr.stack[end], r)
 end
+
 function execute!(upkr::UnPickler, ::Val{OpCodes.TUPLE3}, arg)
   r = pop!(upkr.stack)
   m = pop!(upkr.stack)
   upkr.stack[end] = (upkr.stack[end], m, r)
 end
-execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_DICT}, arg) = push!(upkr.stack, Dict())
 
+execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_DICT}, arg) = push!(upkr.stack, Dict())
 
 function execute!(upkr::UnPickler, ::Val{OpCodes.DICT}, arg)
   items = pop_mark!(upkr)
@@ -96,14 +108,28 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.SETITEM}, arg)
   value = pop!(upkr.stack)
   key = pop!(upkr.stack)
   dict = upkr.stack[end]
-  dict[key] = value
+  if isdefer(dict)
+    upkr.stack[end] = @defer string("setitem ", dict) (real_dict = _get(dict); real_dict[_get(key)] = _get(value); real_dict)
+  else
+    dict[key] = value
+  end
 end
 
 function execute!(upkr::UnPickler, ::Val{OpCodes.SETITEMS}, arg)
   items = pop_mark!(upkr)
   dict = upkr.stack[end]
-  for i in 1:2:length(items)
-    dict[items[i]] = items[i+1]
+  if isdefer(dict)
+    upkr.stack[end] = @defer string("setitems ", dict) begin
+      real_dict = _get(dict)
+      for i in 1:2:length(items)
+        read_dict[_get(items[i])] = _get(items[i+1])
+      end
+      real_dict
+    end
+  else
+    for i in 1:2:length(items)
+      dict[items[i]] = items[i+1]
+    end
   end
 end
 
@@ -112,8 +138,18 @@ execute!(upkr::UnPickler, ::Val{OpCodes.EMPTY_SET}, arg) = push!(upkr.stack, Set
 function execute!(upkr::UnPickler, ::Val{OpCodes.ADDITEMS}, arg)
   items = pop_mark!(upkr)
   obj = upkr.stack[end]
-  for item in items
-    push!(obj, item)
+  if isdefer(obj)
+    upkr.stack[end] = @defer string("additems ", obj) begin
+      real_set = _get(obj)
+      for item in items
+        push!(obj, _get(item))
+      end
+      real_set
+    end
+  else
+    for item in items
+      push!(obj, item)
+    end
   end
 end
 
@@ -158,8 +194,8 @@ function _defer(md, fn, defer)
     real_fn = get(mt_table, (md, fn), nothing)
     if isnothing(real_fn)
       if defer
-        @info "$(md).$(fn) is not defined in `mt_table`. deferring function call."
-        return (() -> mt_table[(md, fn)](args..., kwargs...)) |> Defer(join((md, fn), '.'))
+        @warn "$(md).$(fn) is not defined in `mt_table`. deferring function call."
+        return @defer join((md, fn), '.') mt_table[(md, fn)](args..., kwargs...)
       else
         error("$(md).$(fn) is not defined in `mt_table`.")
       end
@@ -182,8 +218,8 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.REDUCE}, arg)
   fn = upkr.stack[end]
   @info "reducing $fn with $args"
   if isdefer(fn) || isdefer(args)
-    @info "deferring reduce"
-    upkr.stack[end] = (() -> _get(fn)(_get(args)...)) |> Defer(string(fn))
+    @warn "deferring reduce"
+    upkr.stack[end] = @defer string(fn) _get(fn)(_get(args)...)
   else
     upkr.stack[end] = fn(args...)
   end
@@ -223,8 +259,8 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.BUILD}, arg)
   inst = upkr.stack[end]
   @info "building $inst with $state"
   if isdefer(inst) || isdefer(state)
-    @info "deferring build"
-    upkr.stack[end] = (()-> _build!(_get(inst), _get(state))) |> Defer(string("_build ", inst))
+    @warn "deferring build"
+    upkr.stack[end] = @defer string("_build ", inst) _build!(_get(inst), _get(state))
   else
     return _build!(inst, state)
   end
@@ -242,9 +278,9 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.OBJ}, arg)
   init = pop!(upkr.stack)
   @info "instantiatiating $init with $args"
   if isdefer(init) || isdefer(args)
-    @info "deferring instantiatiate"
+    @warn "deferring instantiatiate"
     push!(upkr.stack,
-          (()->_get(init)(_get(args)...)) |> Defer(string(inst)))
+          @defer string(inst) _get(init)(_get(args)...))
   else
     push!(upkr.stack, init(args...))
   end
@@ -255,9 +291,9 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ}, arg)
   init = pop!(upkr.stack)
   @info "new object $init with $args"
   if isdefer(init) || isdefer(args)
-    @info "deferring new"
+    @warn "deferring new"
     push!(upkr.stack,
-          (()->_get(init)(_get(args)...)) |> Defer(string(init)))
+          @defer string(init) _get(init)(_get(args)...))
   else
     push!(upkr.stack, init(args...))
   end
@@ -269,9 +305,9 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ_EX}, arg)
   init = pop!(upkr.stack)
   @info "new object $init with $args and $kwargs"
   if isdefer(init) || isdefer(args)
-    @info "deferring new"
+    @warn "deferring new"
     push!(upkr.stack,
-          (()->_get(init)(_get(args)...; _get(kwargs)...)) |> Defer(string(init)))
+          @defer string(init) _get(init)(_get(args)...; _get(kwargs)...))
   else
     push!(upkr.stack, init(args...; kwargs...))
   end
@@ -289,11 +325,17 @@ end
 execute!(upkr::UnPickler, ::Val{OpCodes.PERSID}, arg) = push!(upkr.stack, arg)
 function execute!(upkr::UnPickler, ::Val{OpCodes.BINPERSID}, arg)
   pid = pop!(upkr.stack)
-  x = persistent_load(upkr, pid)
+  @info "loading persistent id with $pid"
+  if !applicable(persistent_load, upkr, pid) && upkr.defer
+    @warn "failed to apply persistent_load. deferring persistent_load call"
+    x = @defer "persistent_load" persistent_load(upkr, pid)
+  else
+    x = persistent_load(upkr, pid)
+  end
   push!(upkr.stack, x)
 end
 
-persistent_load(::UnPickler, pid) = error("unsupported persistent id encountered")
+function persistent_load end
 
 load(io::IO) = load(UnPickler(), io)
 function load(upkr::UnPickler, io::IO)

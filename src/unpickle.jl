@@ -151,7 +151,14 @@ end
 # execute!(upkr::UnPickler, ::Val{OpCodes.EXT4}, arg) = read_int4
 
 struct Defer{F}
+  name::String
   f::F
+end
+
+Defer(name::String) = f->Defer(name, f)
+
+function Base.show(io::IO, def::Defer)
+  print(io, "<Deferred $(def.name)>")
 end
 
 _get(def::Defer) = def.f()
@@ -177,7 +184,7 @@ function _defer(md, fn, defer)
     if isnothing(real_fn)
       if defer
         @info "$(md).$(fn) is not defined in `mt_table`. deferring function call."
-        return (() -> mt_table[(md, fn)](args..., kwargs...)) |> Defer
+        return (() -> mt_table[(md, fn)](args..., kwargs...)) |> Defer(join((md, fn), '.'))
       else
         error("$(md).$(fn) is not defined in `mt_table`.")
       end
@@ -201,7 +208,7 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.REDUCE}, arg)
   @info "reducing $fn with $args"
   if isdefer(fn) || isdefer(args)
     @info "deferring reduce"
-    upkr.stack[end] = (() -> _get(fn)(_get(args)...)) |> Defer
+    upkr.stack[end] = (() -> _get(fn)(_get(args)...)) |> Defer(string(fn))
   else
     upkr.stack[end] = fn(args...)
   end
@@ -211,6 +218,7 @@ function setstate! end
 
 # this is very likely to break
 function _build!(inst, state)
+  @info "building"
   if applicable(setstate!, inst)
     return setstate!(inst, state)
   else
@@ -241,7 +249,7 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.BUILD}, arg)
   @info "building $inst with $state"
   if isdefer(inst) || isdefer(state)
     @info "deferring build"
-    return (()-> _build!(_get(inst), _get(state))) |> Defer
+    upkr.stack[end] = (()-> _build!(_get(inst), _get(state))) |> Defer(string("_build ", inst))
   else
     return _build!(inst, state)
   end
@@ -261,7 +269,7 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.OBJ}, arg)
   if isdefer(init) || isdefer(args)
     @info "deferring instantiatiate"
     push!(upkr.stack,
-          (()->_get(init)(_get(args)...)) |> Defer)
+          (()->_get(init)(_get(args)...)) |> Defer(string(inst)))
   else
     push!(upkr.stack, init(args...))
   end
@@ -274,7 +282,7 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ}, arg)
   if isdefer(init) || isdefer(args)
     @info "deferring new"
     push!(upkr.stack,
-          (()->_get(init)(_get(args)...)) |> Defer)
+          (()->_get(init)(_get(args)...)) |> Defer(string(init)))
   else
     push!(upkr.stack, init(args...))
   end
@@ -288,7 +296,7 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ_EX}, arg)
   if isdefer(init) || isdefer(args)
     @info "deferring new"
     push!(upkr.stack,
-          (()->_get(init)(_get(args)...; _get(kwargs)...)) |> Defer)
+          (()->_get(init)(_get(args)...; _get(kwargs)...)) |> Defer(string(init)))
   else
     push!(upkr.stack, init(args...; kwargs...))
   end

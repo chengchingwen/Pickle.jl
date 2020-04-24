@@ -7,7 +7,7 @@ end
 
 include("./readarg.jl")
 include("./writearg.jl")
-include("./opcode.jl")
+include("./opcode/opcode.jl")
 using .OpCodes
 
 include("./defer.jl")

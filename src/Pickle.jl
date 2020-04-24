@@ -10,6 +10,7 @@ include("./writearg.jl")
 include("./opcode.jl")
 using .OpCodes
 
+include("./defer.jl")
 include("./pickler.jl")
 include("./unpickle.jl")
 

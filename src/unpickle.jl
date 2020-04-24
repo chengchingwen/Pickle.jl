@@ -150,31 +150,6 @@ end
 # execute!(upkr::UnPickler, ::Val{OpCodes.EXT2}, arg) = read_uint2
 # execute!(upkr::UnPickler, ::Val{OpCodes.EXT4}, arg) = read_int4
 
-struct Defer{F}
-  name::String
-  f::F
-end
-
-Defer(name::String) = f->Defer(name, f)
-
-function Base.show(io::IO, def::Defer)
-  print(io, "<Deferred $(def.name)>")
-end
-
-_get(def::Defer) = def.f()
-_get(x) = x
-_get(arr::Union{Array, Tuple, NTuple}) = isdefer(arr) ? map(_get, arr) : arr
-_get(p::Pair) = isdefer(p) ? _get(p[0])=>_get(p[1]) : p
-_get(dict::Dict) = isdefer(dict) ? Dict(_get(k)=>_get(v) for (k, v) in dict) : dict
-
-(def::Defer)() = _get(def)
-
-isdefer(::Defer) = true
-isdefer(x) = false
-isdefer(arr::Union{Array, Tuple, NTuple}) = any(isdefer, arr)
-isdefer(p::Pair) = isdefer(p[1]) || isdefer(p[2])
-isdefer(dict::Dict) = any(isdefer, pairs(dict))
-
 function _defer(md, fn, defer)
   @info "loading $(md).$(fn)"
   return function (args...; kwargs...)

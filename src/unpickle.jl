@@ -213,32 +213,29 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.REDUCE}, arg)
   end
 end
 
-function setstate! end
+function setstate end
+
+setstate!(inst, ::Nothing) = inst
+function setstate!(inst, state::NTuple{2, Any})
+  state, slotstate = state
+  inst = setstate!(inst, state)
+  inst = setstate!(inst, slotstate)
+  return inst
+end
+function setstate!(inst, state::Dict)
+  for (k, v) in pairs(state)
+    setfield!(inst, Symbol(k), v)
+  end
+  return inst
+end
 
 # this is very likely to break
 function _build!(inst, state)
   @info "building"
-  if applicable(setstate!, inst, state)
-    return setstate!(inst, state)
+  if applicable(setstate, inst, state)
+    return setstate(inst, state)
   else
-    if state isa Tuple && length(state) == 2
-      state, slotstate = state
-    else
-      slotstate = nothing
-    end
-
-    if !isnothing(state)
-      for (k, v) in pairs(state)
-        setfield!(inst, Symbol(k), v)
-      end
-    end
-
-    if !isnothing(slotstate)
-      for (k, v) in pairs(slotstate)
-        setfield!(inst, Symbol(k), v)
-      end
-    end
-    return inst
+    return setstate!(inst, state)
   end
 end
 
@@ -250,7 +247,7 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.BUILD}, arg)
     @warn "deferring build"
     upkr.stack[end] = @defer string("_build ", inst) _build!(_get(inst), _get(state))
   else
-    return _build!(inst, state)
+    upkr.stack[end] = _build(inst, state)
   end
 end
 
@@ -301,6 +298,9 @@ function execute!(upkr::UnPickler, ::Val{OpCodes.NEWOBJ_EX}, arg)
   end
 end
 
+"""
+  checking compatibility
+"""
 function execute!(upkr::UnPickler, ::Val{OpCodes.PROTO}, arg)
   upkr.proto = arg
 end

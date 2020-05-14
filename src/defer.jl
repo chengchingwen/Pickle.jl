@@ -40,6 +40,9 @@ struct DeferFunc{F}
   defer::Bool
 end
 
+isdefer(df::DeferFunc) = true
+_get(df::DeferFunc) = (global mt_table; isnothing(df) ? mt_table[(df.md, df.fn)] : df.f)
+
 function Base.show(io::IO, df::DeferFunc)
   print(io, "<$( isnothing(df.f) ? "Deferred " : "")Func $(df.md).$(df.fn)>")
 end
@@ -52,10 +55,13 @@ function (df::DeferFunc)(args...; kwargs...)
   if isnothing(real_fn)
     if defer
       @warn "$(md).$(fn) is not defined in `mt_table`. deferring function call."
-      return @defer join((md, fn), '.') mt_table[(md, fn)](args..., kwargs...)
+      return @defer join((md, fn), '.') mt_table[(md, fn)](_get(args)..., _get(kwargs)...)
     else
       error("$(md).$(fn) is not defined in `mt_table`.")
     end
+  elseif isdefer(args) || isdefer(kwargs)
+    @warn "deferring call"
+    return @defer join((md, fn), '.') real_fn(_get(args)..., _get(kwargs)...)
   else
     return real_fn(args...; kwargs...)
   end

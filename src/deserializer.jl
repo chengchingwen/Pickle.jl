@@ -77,16 +77,16 @@ protocal(::Pickler{P}) where {P} = P
 isbinary(pklr::Pickler) = protocal(pklr) >= 1
 
 deserialize(file::AbstractString) = deserialize(Pickler(), file)
-deserialize(p::Pickler, file::AbstractString) = open(file, "r") do io
+deserialize(p::AbstractPickle, file::AbstractString) = open(file, "r") do io
   deserialize(p,  io)
 end
-deserialize(p::Pickler, io::IO) = load(p, io)
+deserialize(p::AbstractPickle, io::IO) = load(p, io)
 
 loads(s) = loads(Pickler(), s)
-loads(p::Pickler, s) = load(p, IOBuffer(s))
+loads(p::AbstractPickle, s) = load(p, IOBuffer(s))
 
 load(io::IO) = load(Pickler(), io)
-function load(p::Pickler, io::IO)
+function load(p::AbstractPickle, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)
     run!(p, opcode, io)
@@ -95,7 +95,7 @@ function load(p::Pickler, io::IO)
   end
 end
 
-function run!(p::Pickler, op::OpCode, io::IO)
+function run!(p::AbstractPickle, op::OpCode, io::IO)
   argf = OpCodes.argument(op)
   arg = isnothing(argf) ? nothing : argf(io)
 
@@ -107,18 +107,18 @@ for op in :(INT, LONG, LONG1, LONG4,
             BINBYTES, SHORT_BINBYTES, BINBYTES8, BYTEARRAY8,
             UNICODE, SHORT_BINUNICODE, BINUNICODE, BINUNICODE8,
             FLOAT, BINFLOAT).args
-  @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) = push!(p.stack, arg)
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, arg)
 end
 
 for op in :(BININT, BININT1, BININT2).args
-  @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) = push!(p.stack, Int(arg))
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, Int(arg))
 end
 
 for (op, arg) in zip(
   :(NONE, NEWTRUE, NEWFALSE, EMPTY_LIST, EMPTY_TUPLE, EMPTY_DICT, EMPTY_SET).args,
   :(nothing, true, false, [], (), Dict(), Set()).args
 )
-  @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) = push!(p.stack, $arg)
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, $arg)
 end
 
 
@@ -173,7 +173,7 @@ for (op, tag, popf, pushf) in (
   (:SETITEM,  :(:setitem),  pop2!,   _setkey!),
   (:SETITEMS, :(:setitems), unmark!, _setkeys!),
   (:ADDITEMS, :(:additems), unmark!, _addvalue))
-  @eval function execute!(p::Pickler, ::Val{OpCodes.$op}, @nospecialize(arg))
+  @eval function execute!(p::AbstractPickle, ::Val{OpCodes.$op}, @nospecialize(arg))
     value = $popf(p.stack)
     obj = first(p.stack)
     if obj isa Defer
@@ -188,51 +188,51 @@ for (op, tag, popf, pushf) in (
   end
 end
 
-execute!(p::Pickler, ::Val{OpCodes.LIST}, arg) = push!(p.stack, unmark!(p.stack))
-execute!(p::Pickler, ::Val{OpCodes.TUPLE}, arg) = push!(p.stack, Tuple(unmark!(p.stack)))
+execute!(p::AbstractPickle, ::Val{OpCodes.LIST}, arg) = push!(p.stack, unmark!(p.stack))
+execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE}, arg) = push!(p.stack, Tuple(unmark!(p.stack)))
 
-execute!(p::Pickler, ::Val{OpCodes.TUPLE1}, arg) = push!(p.stack, Tuple(pop!(p.stack)))
-execute!(p::Pickler, ::Val{OpCodes.TUPLE2}, arg) = push!(p.stack, reverse(pop2!(p.stack)))
+execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE1}, arg) = push!(p.stack, Tuple(pop!(p.stack)))
+execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE2}, arg) = push!(p.stack, reverse(pop2!(p.stack)))
 
-execute!(p::Pickler, ::Val{OpCodes.TUPLE3}, arg) = push!(p.stack, reverse(pop3!(p.stack)))
+execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE3}, arg) = push!(p.stack, reverse(pop3!(p.stack)))
 
-function execute!(p::Pickler, ::Val{OpCodes.DICT}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.DICT}, arg)
   pairs = unmark!(p.stack)
   push!(p.stack, Dict(items[i]=>items[i+1] for i = 1:2:length(items)))
 end
 
-execute!(p::Pickler, ::Val{OpCodes.POP}, arg) =
+execute!(p::AbstractPickle, ::Val{OpCodes.POP}, arg) =
   isempty(p.stack) ? unmark!(p.stack) : pop!(p.stack)
-execute!(p::Pickler, ::Val{OpCodes.DUP}, arg) = push!(p.stack, first(p.stack))
-execute!(p::Pickler, ::Val{OpCodes.MARK}, arg) = mark!(p.stack)
-execute!(p::Pickler, ::Val{OpCodes.POP_MARK}, arg) = unmark!(p.stack)
+execute!(p::AbstractPickle, ::Val{OpCodes.DUP}, arg) = push!(p.stack, first(p.stack))
+execute!(p::AbstractPickle, ::Val{OpCodes.MARK}, arg) = mark!(p.stack)
+execute!(p::AbstractPickle, ::Val{OpCodes.POP_MARK}, arg) = unmark!(p.stack)
 
 for op in :(GET, BINGET, LONG_BINGET).args
-  @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) =
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) =
     push!(p.stack, p.memo[Int(arg)])
 end
 
 for op in :(PUT, BINPUT, LONG_BINPUT).args
-  @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) =
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) =
     setindex!(p.memo, first(p.stack), Int(arg))
 end
 
-execute!(p::Pickler, ::Val{OpCodes.MEMOIZE}, arg) =
+execute!(p::AbstractPickle, ::Val{OpCodes.MEMOIZE}, arg) =
   setindex!(p.memo, first(p.stack), length(p.memo))
 
-function execute!(p::Pickler, ::Val{OpCodes.FROZENSET}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.FROZENSET}, arg)
   fz = lookup(p.mt, "__main__", "frozenset")
   obj = isnothing(fz) ? Defer(gensym(:frozenset)) : fz()
   push!(p.stack, obj)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.GLOBAL}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.GLOBAL}, arg)
   func = lookup(p.mt, arg...)
   obj = isnothing(func) ? Defer(Symbol(join(arg, '.'))) : func
   push!(p.stack, obj)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.STACK_GLOBAL}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.STACK_GLOBAL}, arg)
   name = pop!(p.stack)
   scope = pop!(p.stack)
   func = lookup(p.mt, scope, name)
@@ -240,55 +240,55 @@ function execute!(p::Pickler, ::Val{OpCodes.STACK_GLOBAL}, arg)
   push!(p.stack, obj)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.REDUCE}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
   args = pop!(p.stack)
   f = first(p.stack)
   res = f isa Defer ? Defer(:reduce, f, args...) : f(args...)
   updatefirst!(p.stack, res)
 end
 
-execute!(p::Pickler, ::Val{OpCodes.PROTO}, arg) = @assert protocal(p) >= arg
+execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocal(p) >= arg
 
 
 # FRAMEING is ignored, but can be added if we found performance is bounded by io
 for op in :(STOP, FRAME).args
-  @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) = nothing
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = nothing
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.PERSID}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.PERSID}, arg)
   f = lookup(p.mt, "__main__", "persistent_load")
   obj = isnothing(f) ? Defer(:persistent_load, arg) : f(arg)
   push!(p.stack, obj)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.BINPERSID}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.BINPERSID}, arg)
   f = lookup(p.mt, "__main__", "persistent_load")
   pid = pop!(p.stack)
   obj = isnothing(f) ? Defer(:persistent_load, pid) : f(pid)
   push!(p.stack, obj)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.INST}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.INST}, arg)
   f = lookup(p.mt, arg...)
   args = unmark!(p.stack)
   res = isnothing(f) ? Defer(:inst, f, args...) : f(args...)
   push!(p.stack, res)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.OBJ}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.OBJ}, arg)
   args = unmark!(p.stack)
   cls = popfirst!(args)
   res = cls isa Defer ? Defer(:obj, cls, args...) : cls(args...)
   push!(p.stack, res)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.NEWOBJ}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.NEWOBJ}, arg)
   args, cls = pop2!(p.stack)
   res = cls isa Defer ? Defer(:newobj, cls, args...) : cls(args...)
   push!(p.stack, res)
 end
 
-function execute!(p::Pickler, ::Val{OpCodes.NEWOBJ_EX}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.NEWOBJ_EX}, arg)
   kwargs, args, cls = pop3!(p.stack)
   if cls isa Defer
     res = Defer(:newobj_ex, cls, kwargs, args...)
@@ -300,7 +300,7 @@ end
 
 objectname(T) = string(Base.typename(typeof(T)))
 
-function execute!(p::Pickler, ::Val{OpCodes.BUILD}, arg)
+function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   args = pop!(p.stack)
   obj = first(p.stack)
   if obj isa Defer
@@ -319,10 +319,10 @@ function execute!(p::Pickler, ::Val{OpCodes.BUILD}, arg)
 end
 
 # PROTOCAL 5 not supported
-# execute!(p::Pickler, ::Val{OpCodes.NEXT_BUFFER}, arg) = nothing
-# execute!(p::Pickler, ::Val{OpCodes.READONLY_BUFFER}, arg) = nothing
+# execute!(p::AbstractPickle, ::Val{OpCodes.NEXT_BUFFER}, arg) = nothing
+# execute!(p::AbstractPickle, ::Val{OpCodes.READONLY_BUFFER}, arg) = nothing
 
 # Extension not supported, fire an issue if you need it.
-# execute!(p::Pickler, ::Val{OpCodes.EXT1}, arg) = read_uint1
-# execute!(p::Pickler, ::Val{OpCodes.EXT2}, arg) = read_uint2
-# execute!(p::Pickler, ::Val{OpCodes.EXT4}, arg) = read_int4
+# execute!(p::AbstractPickle, ::Val{OpCodes.EXT1}, arg) = read_uint1
+# execute!(p::AbstractPickle, ::Val{OpCodes.EXT2}, arg) = read_uint2
+# execute!(p::AbstractPickle, ::Val{OpCodes.EXT4}, arg) = read_int4

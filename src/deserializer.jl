@@ -106,7 +106,7 @@ for op in :(INT, LONG, LONG1, LONG4,
             STRING, BINSTRING, SHORT_BINSTRING,
             BINBYTES, SHORT_BINBYTES, BINBYTES8, BYTEARRAY8,
             UNICODE, SHORT_BINUNICODE, BINUNICODE, BINUNICODE8,
-            FLOAT, BINFLOAT, PERSID).args
+            FLOAT, BINFLOAT).args
   @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) = push!(p.stack, arg)
 end
 
@@ -249,8 +249,16 @@ end
 
 execute!(p::Pickler, ::Val{OpCodes.PROTO}, arg) = @assert protocal(p) >= arg
 
+
+# FRAMEING is ignored, but can be added if we found performance is bounded by io
 for op in :(STOP, FRAME).args
   @eval execute!(p::Pickler, ::Val{OpCodes.$op}, arg) = nothing
+end
+
+function execute!(p::Pickler, ::Val{OpCodes.PERSID}, arg)
+  f = lookup(p.mt, "__main__", "persistent_load")
+  obj = isnothing(f) ? Defer(:persistent_load, arg) : f(arg)
+  push!(p.stack, obj)
 end
 
 function execute!(p::Pickler, ::Val{OpCodes.BINPERSID}, arg)
@@ -309,3 +317,12 @@ function execute!(p::Pickler, ::Val{OpCodes.BUILD}, arg)
     maybeupdatefirst!(p.stack, newobj)
   end
 end
+
+# PROTOCAL 5 not supported
+# execute!(p::Pickler, ::Val{OpCodes.NEXT_BUFFER}, arg) = nothing
+# execute!(p::Pickler, ::Val{OpCodes.READONLY_BUFFER}, arg) = nothing
+
+# Extension not supported, fire an issue if you need it.
+# execute!(p::Pickler, ::Val{OpCodes.EXT1}, arg) = read_uint1
+# execute!(p::Pickler, ::Val{OpCodes.EXT2}, arg) = read_uint2
+# execute!(p::Pickler, ::Val{OpCodes.EXT4}, arg) = read_int4

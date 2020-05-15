@@ -1,6 +1,7 @@
 import Base: push!, pop!, first, isempty, show, setindex!, getindex
 
-using Serialization
+import Serialization
+using Serialization: AbstractSerializer
 
 using DataStructures
 
@@ -76,11 +77,11 @@ Pickler(proto=DEFAULT_PROTO, memo=Dict()) = Pickler{proto}(Memo(memo), PickleSta
 protocal(::Pickler{P}) where {P} = P
 isbinary(pklr::Pickler) = protocal(pklr) >= 1
 
-deserialize(file::AbstractString) = deserialize(Pickler(), file)
-deserialize(p::AbstractPickle, file::AbstractString) = open(file, "r") do io
-  deserialize(p,  io)
+deserialize(file::AbstractString) = Serialization.deserialize(Pickler(), file)
+Serialization.deserialize(p::AbstractPickle, file::AbstractString) = open(file, "r") do io
+  Serialization.deserialize(p,  io)
 end
-deserialize(p::AbstractPickle, io::IO) = load(p, io)
+Serialization.deserialize(p::AbstractPickle, io::IO) = load(p, io)
 
 loads(s) = loads(Pickler(), s)
 loads(p::AbstractPickle, s) = load(p, IOBuffer(s))

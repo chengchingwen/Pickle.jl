@@ -10,7 +10,7 @@ TableBlock(depth) = TableBlock(depth, Dict())
 
 @inline haskey(tb::TableBlock, x) = haskey(tb.entry, x)
 
-function setindex!(tb::TableBlock, value::Some, key; maxdepth=typemax(Int))
+function _setentry!(tb::TableBlock, value::Some, key; maxdepth=typemax(Int))
   (haskey(tb, key) || !any(isequal('.'), key) || tb.depth >= maxdepth) &&
     return setindex!(tb.entry, value, key)
 
@@ -21,16 +21,22 @@ function setindex!(tb::TableBlock, value::Some, key; maxdepth=typemax(Int))
     setindex!(tb.entry, _ctb, scope)
     _ctb
   end
-  return setindex!(ctb, value, id)
+  return _setentry!(ctb, value, id)
 end
 
-function getindex(tb::TableBlock, key; maxdepth=typemax(Int), error=false)
+function _getentry(tb::TableBlock, key; maxdepth=typemax(Int), error=false)
   (haskey(tb, key) || !any(isequal('.'), key) || tb.depth >= maxdepth) &&
     (error ? (return getindex(tb.entry, key)) : (return get(tb.entry, key, nothing)))
 
   scope, id = split(key, '.'; limit=2)
 
-  !haskey(tb, scope) ? (error ? throw(KeyError(scope)) : return nothing) : return getindex(tb.entry[scope], id)
+  if !haskey(tb, scope)
+    error ? throw(KeyError(scope)) : return nothing
+  else
+    ctb = tb.entry[scope]
+    !(ctb isa TableBlock) && (error ? throw(KeyError(scope)) : return nothing)
+    return _getentry(ctb, id)
+  end
 end
 
 struct HierarchicalTable
@@ -41,20 +47,20 @@ end
 HierarchicalTable() = HierarchicalTable(typemax(Int))
 HierarchicalTable(maxdepth) = HierarchicalTable(maxdepth, TableBlock())
 
-setindex!(ht::HierarchicalTable, value, key) = setindex!(ht.head, Some(value), key; maxdepth=ht.maxdepth)
+setindex!(ht::HierarchicalTable, value, key) = _setentry!(ht.head, Some(value), key; maxdepth=ht.maxdepth)
 
-getindex(ht::HierarchicalTable, key) = something(getindex(ht.head, key; maxdepth=ht.maxdepth, error=true))
+getindex(ht::HierarchicalTable, key) = something(_getentry(ht.head, key; maxdepth=ht.maxdepth, error=true))
 
-haskey(ht::HierarchicalTable, key) = !isnothing(getindex(ht.head, key))
+haskey(ht::HierarchicalTable, key) = !isnothing(_getentry(ht.head, key))
 
 const GLOBAL_MT = HierarchicalTable()
 
 function lookup(mt::HierarchicalTable, scope, name)
   global GLOBAL_MT
   key = join((scope, name), '.')
-  mtv = getindex(mt.head, key)
+  mtv = _getentry(mt.head, key)
   if isnothing(mtv)
-    gmtv = getindex(GLOBAL_MT.head, key)
+    gmtv = _getentry(GLOBAL_MT.head, key)
     return isnothing(gmtv) ? gmtv : something(gmtv)
   else
     return something(mtv)

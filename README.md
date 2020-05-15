@@ -18,8 +18,8 @@ An experimental package for loading and saving object in Python Pickle format.
 ```
 
 
-2.  framework for easy analysis and implement required translation methods. The unconstructable data will 
-store in a `Defer` object which is similar to `Expr` but is mutable.
+2.  framework for easily analyze and implement required translation methods. The unconstructable data will 
+be stored in a `Defer` object which is similar to `Expr` but is mutable.
 
 ```jl
 julia> Pickle.deserialize("test/test_pkl/test-np.pkl")
@@ -74,4 +74,3 @@ Pickle.Defer
       5: Array{UInt8}((120,)) UInt8[0x29, 0x0f, 0x9c, 0x3b, 0x11, 0x5a, 0xbf, 0x3f, 0x29, 0xa6  …  0xb8, 0x3f, 0x6b
 , 0x4a, 0x31, 0xab, 0x2b, 0xc5, 0xf2, 0x3f]
 ```
-

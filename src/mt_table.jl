@@ -43,7 +43,7 @@ HierarchicalTable(maxdepth) = HierarchicalTable(maxdepth, TableBlock())
 
 setindex!(ht::HierarchicalTable, value, key) = setindex!(ht.head, Some(value), key; maxdepth=ht.maxdepth)
 
-getindex(ht::HierarchicalTable, key) = something(getindex(ht.head, key; maxdepth=ht.maxdepth, error=false))
+getindex(ht::HierarchicalTable, key) = something(getindex(ht.head, key; maxdepth=ht.maxdepth, error=true))
 
 haskey(ht::HierarchicalTable, key) = !isnothing(getindex(ht.head, key))
 

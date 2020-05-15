@@ -113,8 +113,7 @@ return the argument reader of an OpCode.
 """
 argument(op::OpCode) = argument(Val(op))
 
-
-for (ops, f) in (
+const OP_ARG_MAP = (
   :(INT, GET, PUT,)            => :read_decimalnl_short,
   :(LONG,)                     => :read_decimalnl_long,
   :(BININT, EXT4,)             => :read_int4,
@@ -151,6 +150,9 @@ for (ops, f) in (
     OBJ, NEWOBJ, NEWOBJ_EX,
     STOP, BINPERSID,)          => nothing,
 )
+
+
+for (ops, f) in OP_ARG_MAP
   if isnothing(f)
     for op in ops.args
       @eval argument(::Val{$op}) = nothing
@@ -161,7 +163,6 @@ for (ops, f) in (
     end
   end
 end
-
 
 function maybe_opcode(x)
     if x in keys(namemap(OpCode))

@@ -13,4 +13,7 @@ using .OpCodes
 include("./mt_table.jl")
 include("./deserializer.jl")
 
+include("./torch/torch.jl")
+using .Torch
+
 end # module

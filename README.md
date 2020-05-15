@@ -18,7 +18,7 @@ An experimental package for loading and saving object in Python Pickle format.
 ```
 
 
-2.  framework for easily analyze and implement required translation methods. The unconstructable data will 
+2.  framework for easily analyze and implement required translation methods. For those data which are
 be stored in a `Defer` object which is similar to `Expr` but is mutable.
 
 ```jl

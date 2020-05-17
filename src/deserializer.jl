@@ -311,7 +311,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
     if isnothing(build)
       newobj = Defer(:build, obj, args)
     else
-      newobj = build!(obj, args)
+      newobj = build(obj, args)
     end
     hasref(p.memo, obj) &&
       maybeupdate!(p.memo, obj, newobj)

@@ -1,6 +1,4 @@
-module Storage
-
-import Base: setindex!, getindex
+import Base: setindex!, getindex, haskey
 
 @enum DType begin
   FLOAT
@@ -14,7 +12,7 @@ import Base: setindex!, getindex
   BOOL
 end
 
-function jtype(t::DType)
+function dtype2jltype(t::DType)
   if t == FLOAT
     return Float32
   elseif t == DOUBLE
@@ -36,7 +34,7 @@ function jtype(t::DType)
   end
 end
 
-function bitwidth(t::DType)
+function bytewidth(t::DType)
   if t == FLOAT
     return 4
   elseif t == DOUBLE
@@ -58,7 +56,7 @@ function bitwidth(t::DType)
   end
 end
 
-function type2dtype(defer)
+function thtype2dtype(defer)
   type = defer.head
   if type == Symbol("torch.FloatStorage")
     return FLOAT
@@ -84,20 +82,20 @@ function type2dtype(defer)
 end
 
 struct StorageManager
-  data::Dict{String, Tuple{DType, Int, String}}
+  data::Dict{String, Tuple{DType, Int, String, Array}}
 end
 
 StorageManager() = StorageManager(Dict())
 setindex!(sm::StorageManager, value, key) = setindex!(sm.data, value, key)
 getindex(sm::StorageManager, key) = getindex(sm.data, key)
-const STORAGE = StorageManager()
+haskey(sm, key) = haskey(sm.data, key)
 
-function persistent_load((id, dtype, key, device, numel, _))
-  @assert id == "storage"
-  global STORAGE
-  setindex!(STORAGE, (type2dtype(dtype), numel, device), key)
+# function persistent_load((id, dtype, key, device, numel, _))
+#   @assert id == "storage"
+#   dtype = type2dtype(dtype)
+#   jltype = jltype(dtype)
+#   buf = Array{jltype}(undef, numel)
 
-  return key
-end
-
-end
+#   setindex!(STORAGE, (dtype, numel, device, buf), key)
+#   return buf
+# end

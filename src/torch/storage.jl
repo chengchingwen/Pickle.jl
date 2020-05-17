@@ -89,13 +89,3 @@ StorageManager() = StorageManager(Dict())
 setindex!(sm::StorageManager, value, key) = setindex!(sm.data, value, key)
 getindex(sm::StorageManager, key) = getindex(sm.data, key)
 haskey(sm, key) = haskey(sm.data, key)
-
-# function persistent_load((id, dtype, key, device, numel, _))
-#   @assert id == "storage"
-#   dtype = type2dtype(dtype)
-#   jltype = jltype(dtype)
-#   buf = Array{jltype}(undef, numel)
-
-#   setindex!(STORAGE, (dtype, numel, device, buf), key)
-#   return buf
-# end

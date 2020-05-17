@@ -30,7 +30,7 @@ function dtype2jltype(t::DType)
   elseif t == LONG
     return Int64
   elseif t == BOOL
-    error("I don't know")
+    return Bool
   end
 end
 
@@ -52,7 +52,7 @@ function bytewidth(t::DType)
   elseif t == LONG
     return 8
   elseif t == BOOL
-    error("I don't know")
+    return 1
   end
 end
 

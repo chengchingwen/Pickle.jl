@@ -74,8 +74,8 @@ end
 
 Pickler(proto=DEFAULT_PROTO, memo=Dict()) = Pickler{proto}(Memo(memo), PickleStack(), HierarchicalTable())
 
-protocal(::Pickler{P}) where {P} = P
-isbinary(pklr::Pickler) = protocal(pklr) >= 1
+protocol(::Pickler{P}) where {P} = P
+isbinary(pklr::Pickler) = protocol(pklr) >= 1
 
 deserialize(file::AbstractString) = Serialization.deserialize(Pickler(), file)
 Serialization.deserialize(p::AbstractPickle, file::AbstractString) = open(file, "r") do io
@@ -248,7 +248,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
   updatefirst!(p.stack, res)
 end
 
-execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocal(p) >= arg
+execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg
 
 
 # FRAMEING is ignored, but can be added if we found performance is bounded by io

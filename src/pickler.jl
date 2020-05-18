@@ -9,8 +9,8 @@ end
 
 Pickler(proto=DEFAULT_PROTO, memo=Dict()) = Pickler{proto}(memo)
 
-protocal(::Pickler{P}) where {P} = P
-isbinary(pklr::Pickler) = protocal(pklr) >= 1
+protocol(::Pickler{P}) where {P} = P
+isbinary(pklr::Pickler) = protocol(pklr) >= 1
 
 
 persistent_id(x) = nothing
@@ -33,7 +33,7 @@ function save(pklr::Pickler, io::IO, data; save_persistent=true)
 end
 
 function save_put(pklr::Pickler, io::IO, idx)
-  if protocal(pklr) >= 4
+  if protocol(pklr) >= 4
     write(io, OpCodes.MEMOIZE)
   elseif isbinary(pklr)
     if idx < 256
@@ -82,7 +82,7 @@ function save_reduce(pklr::Pickler, io::IO, f, data) end
 _save(pklr::Pickler, io::IO, ::Nothing) = write(io, OpCodes.NONE)
 
 function _save(pklr::Pickler, io::IO, data::Bool)
-  if protocal(pklr) >= 2
+  if protocol(pklr) >= 2
     write(io, data ? OpCodes.NEWTRUE : OpCodes.NEWFALSE)
   else
     write(io, data ? OpCodes.TRUE : OpCodes.FALSE)
@@ -110,7 +110,7 @@ function _save(pklr::Pickler, io::IO, data::Integer)
     end
   end
 
-  if protocal(pklr) >= 2
+  if protocol(pklr) >= 2
     bytes = Pickle.int_to_bytes(data)
     n = length(bytes)
     if n < 256
@@ -150,11 +150,11 @@ _save(pklr::Pickler, io::IO, data::Char) = _save(pklr, io, string(data))
 function _save(pklr::Pickler, io::IO, data::String)
   if isbinary(pklr)
     n = ncodeunits(data)
-    if n <= 0xff && protocal(pklr) >= 4
+    if n <= 0xff && protocol(pklr) >= 4
       write(io, OpCodes.SHORT_BINUNICODE)
       Pickle.write_uint1(io, n)
       write(io, data)
-    elseif n > 0xffffffff && protocal(pklr) >= 4
+    elseif n > 0xffffffff && protocol(pklr) >= 4
       write(io, OpCodes.BINUNICODE8)
       Pickle.write_uint8(io, n)
       write(io, data)
@@ -185,7 +185,7 @@ function _save(pklr::Pickler, io::IO, data::Tuple)
   end
 
   n = length(data)
-  if n <= 3 && protocal(pklr) >= 2
+  if n <= 3 && protocol(pklr) >= 2
     for elm ∈ data
       save(pklr, io, elm)
     end
@@ -306,7 +306,7 @@ function _save(pklr::Pickler, io::IO, data::Dict)
 end
 
 function _save(pklr::Pickler, io::IO, data::Set)
-  if protocal(pklr) < 4
+  if protocol(pklr) < 4
     save_reduce(pklr, io, Set, data)
     return
   end
@@ -330,9 +330,9 @@ end
 
 dump(io::IO, data) = dump(Pickler(), io, data)
 function dump(pklr::Pickler, io::IO, data)
-  if protocal(pklr) >= 2
+  if protocol(pklr) >= 2
     write(io, OpCodes.PROTO)
-    Pickle.write_uint1(io, protocal(pklr))
+    Pickle.write_uint1(io, protocol(pklr))
   end
   save(pklr, io, data)
   write(io, OpCodes.STOP)

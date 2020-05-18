@@ -19,18 +19,18 @@ using Base.Enums: namemap
     STRING             = codepoint('S')
     BINSTRING          = codepoint('T')
     SHORT_BINSTRING    = codepoint('U')
-    # bytes (protocal 3 and higher)
+    # bytes (protocol 3 and higher)
     BINBYTES           = codepoint('B')
     SHORT_BINBYTES     = codepoint('C')
     BINBYTES8          = 0x8e
-    # bytearray (protocal 5 and higher)
+    # bytearray (protocol 5 and higher)
     BYTEARRAY8         = 0x96
     # out-of-band buffer (protocol 5 and higher)
     NEXT_BUFFER        = 0x97
     READONLY_BUFFER    = 0x98
     # none
     NONE               = codepoint('N')
-    # bool (protocal 2 and higher)
+    # bool (protocol 2 and higher)
     NEWTRUE            = 0x88
     NEWFALSE           = 0x89
     # unicode string

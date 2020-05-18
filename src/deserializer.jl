@@ -319,7 +319,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   end
 end
 
-# PROTOCAL 5 not supported
+# PROTOCOL 5 not supported
 # execute!(p::AbstractPickle, ::Val{OpCodes.NEXT_BUFFER}, arg) = nothing
 # execute!(p::AbstractPickle, ::Val{OpCodes.READONLY_BUFFER}, arg) = nothing
 

@@ -13,13 +13,13 @@ write_uint4(io::IO, arg) = write(io, UInt32(arg))
 "write 8 bytes as `UInt64` to `io`"
 write_uint8(io::IO, arg) = write(io, UInt64(arg))
 
-"""
+@doc raw"""
 write unicode string as plain ascii string to `io`
 
 # Examples
 ```jldoctest
 julia> sprint(Pickle.write_plain_str, "abcα😀")
-"abc\\\\u03b1\\\\U0001f600"
+"abc\\u03b1\\U0001f600"
 ```
 """
 function write_plain_str(io::IO, arg)

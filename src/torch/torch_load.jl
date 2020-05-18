@@ -6,7 +6,7 @@ using Strided
 const DEFAULT_PROTO = 2
 
 const MAGIC = BigInt(0x1950a86a20f9469cfc6c)
-const TORCH_PROTOCAL = 1001
+const TORCH_PROTOCOL = 1001
 
 struct TorchPickler{PROTO} <: AbstractPickle
   memo::Memo
@@ -28,8 +28,8 @@ function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
   TorchPickler{proto}(Memo(memo), PickleStack(), mt, st)
 end
 
-protocal(::TorchPickler{P}) where {P} = P
-isbinary(pklr::TorchPickler) = protocal(pklr) >= 1
+protocol(::TorchPickler{P}) where {P} = P
+isbinary(pklr::TorchPickler) = protocol(pklr) >= 1
 
 THload(file::AbstractString) = open(file) do io
   THload(TorchPickler(), io)
@@ -38,8 +38,8 @@ end
 function THload(tp::TorchPickler, io)
   magic = load(tp, io)
   magic != MAGIC && error("Invalid magic number; corrupt file?")
-  torch_protocal = load(tp, io)
-  torch_protocal != TORCH_PROTOCAL && error("Invalid protocol version: $torch_protocal")
+  torch_protocol = load(tp, io)
+  torch_protocol != TORCH_PROTOCOL && error("Invalid protocol version: $torch_protocol")
 
   _sys_info = load(tp, io)
 

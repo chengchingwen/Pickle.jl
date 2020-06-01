@@ -23,32 +23,33 @@ julia> sprint(Pickle.write_plain_str, "abcα😀")
 ```
 """
 function write_plain_str(io::IO, arg)
+  len = 0
   for c in arg
     if isascii(c)
       if c == '\\'
-        write(io, "\\u005c")
+        len += write(io, "\\u005c")
       elseif c == '\0'
-        write(io, "\\u0000")
+        len += write(io, "\\u0000")
       elseif c == '\n'
-        write(io, "\\u000a")
+        len += write(io, "\\u000a")
       elseif c == '\r'
-        write(io, "\\u000d")
+        len += write(io, "\\u000d")
       elseif c == '\u1a'
-        write(io, "\\u001a")
+        len += write(io, "\\u001a")
       else
-        write(io, c)
+        len += write(io, c)
       end
     else
       if codepoint(c) >> 16 |> !iszero # large unicode
-        write(io, "\\U")
-        write(io, lpad(string(codepoint(c); base=16), 8, '0'))
+        len += write(io, "\\U")
+        len += write(io, lpad(string(codepoint(c); base=16), 8, '0'))
       else
-        write(io, "\\u")
-        write(io, lpad(string(codepoint(c); base=16), 4, '0'))
+        len += write(io, "\\u")
+        len += write(io, lpad(string(codepoint(c); base=16), 4, '0'))
       end
     end
   end
-  io
+  len
 end
 
 """

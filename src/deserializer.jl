@@ -219,7 +219,7 @@ for op in :(PUT, BINPUT, LONG_BINPUT).args
 end
 
 execute!(p::AbstractPickle, ::Val{OpCodes.MEMOIZE}, arg) =
-  setindex!(p.memo, first(p.stack), length(p.memo)+1)
+  setindex!(p.memo, first(p.stack), length(p.memo))
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.FROZENSET}, arg)
   fz = lookup(p.mt, "__main__", "frozenset")
@@ -249,6 +249,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
 end
 
 execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg
+
 
 # FRAMEING is ignored, but can be added if we found performance is bounded by io
 for op in :(STOP, FRAME).args

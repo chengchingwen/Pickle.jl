@@ -55,9 +55,9 @@ haskey(ht::HierarchicalTable, key) = !isnothing(_getentry(ht.head, key))
 
 const GLOBAL_MT = HierarchicalTable()
 
-function lookup(mt::HierarchicalTable, scope, name)
+lookup(mt::HierarchicalTable, scope, name) = lookup(mt, join((scope, name), '.'))
+function lookup(mt::HierarchicalTable, key)
   global GLOBAL_MT
-  key = join((scope, name), '.')
   mtv = _getentry(mt.head, key)
   if isnothing(mtv)
     gmtv = _getentry(GLOBAL_MT.head, key)

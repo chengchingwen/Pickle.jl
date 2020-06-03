@@ -257,13 +257,13 @@ for op in :(STOP, FRAME).args
 end
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.PERSID}, arg)
-  f = lookup(p.mt, "__main__", "persistent_load")
+  f = lookup(p.mt, "persistent_load")
   obj = isnothing(f) ? Defer(:persistent_load, arg) : f(arg)
   push!(p.stack, obj)
 end
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.BINPERSID}, arg)
-  f = lookup(p.mt, "__main__", "persistent_load")
+  f = lookup(p.mt, "persistent_load")
   pid = pop!(p.stack)
   obj = isnothing(f) ? Defer(:persistent_load, pid) : f(pid)
   push!(p.stack, obj)
@@ -307,7 +307,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   if obj isa Defer
     wrap!(obj, :build, args)
   else
-    build = lookup(p.mt, "__build__", objectname(obj))
+    build = lookup(p.mt, "__build__", objectname(obj)) # hack for dispatch
     if isnothing(build)
       newobj = Defer(:build, obj, args)
     else

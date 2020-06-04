@@ -1,4 +1,4 @@
-import Base: push!, pop!, first, isempty, show, setindex!, getindex
+import Base: push!, pop!, first, isempty, show, setindex!, getindex, length
 
 import Serialization
 using Serialization: AbstractSerializer
@@ -51,8 +51,10 @@ function setindex!(m::Memo, @nospecialize(value), key)
   setindex!(m.data, value, key)
 end
 
+length(m::Memo) = length(m.data)
 getindex(m::Memo, key) = getindex(m.data, key)
 hasref(m::Memo, @nospecialize(key)) = haskey(m.ref, key)
+getref(m::Memo, @nospecialize(key)) = getindex(m.ref, key)
 
 @inline function maybeupdate!(m::Memo, key, value)
   @nospecialize key value

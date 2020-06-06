@@ -100,5 +100,6 @@ isbinary(pklr::Pickler) = protocol(pklr) >= 1
 
 include("./defaults.jl")
 include("./deserializer.jl")
+include("./serializer.jl")
 
 end # module

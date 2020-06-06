@@ -117,7 +117,7 @@ end
 execute!(p::AbstractPickle, ::Val{OpCodes.LIST}, arg) = push!(p.stack, unmark!(p.stack))
 execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE}, arg) = push!(p.stack, Tuple(unmark!(p.stack)))
 
-execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE1}, arg) = push!(p.stack, Tuple(pop!(p.stack)))
+execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE1}, arg) = push!(p.stack, tuple(pop!(p.stack)))
 execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE2}, arg) = push!(p.stack, reverse(pop2!(p.stack)))
 
 execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE3}, arg) = push!(p.stack, reverse(pop3!(p.stack)))

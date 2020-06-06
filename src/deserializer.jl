@@ -4,10 +4,10 @@ Serialization.deserialize(p::AbstractPickle, file::AbstractString) = open(file, 
 end
 Serialization.deserialize(p::AbstractPickle, io::IO) = load(p, io)
 
-loads(s) = loads(Pickler(), s)
+loads(s; proto=DEFAULT_PROTO) = loads(Pickler(proto), s)
 loads(p::AbstractPickle, s) = load(p, IOBuffer(s))
 
-load(io::IO) = load(Pickler(), io)
+load(io::IO; proto=DEFAULT_PROTO) = load(Pickler(proto), io)
 function load(p::AbstractPickle, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)

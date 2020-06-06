@@ -7,13 +7,13 @@ serialize(file::AbstractString, x) = Serialization.serialize(Pickler(), file, x)
 Serialization.serialize(p::AbstractPickle, file::AbstractString, x) = open(file, "w+") do io
   Serialization.serialize(p, io, x)
 end
-Serialization.serialize(p::AbstractPickle, io::IO, x) = dump(p, io, x)
+Serialization.serialize(p::AbstractPickle, io::IO, x) = store(p, io, x)
 
-dumps(x; proto=DEFAULT_PROTO) = dumps(Pickler(proto), x)
-dumps(p, x) = sprint((io, x)->dump(p, io, x), x)
+stores(x; proto=DEFAULT_PROTO) = stores(Pickler(proto), x)
+stores(p, x) = sprint((io, x)->store(p, io, x), x)
 
-dump(io::IO, x; proto=DEFAULT_PROTO) = dump(Pickler(proto), io, x)
-function dump(p::AbstractPickle, io::IO, @nospecialize(x))
+store(io::IO, x; proto=DEFAULT_PROTO) = store(Pickler(proto), io, x)
+function store(p::AbstractPickle, io::IO, @nospecialize(x))
   protocol(p) >= 2 && write_porotcol(p, io)
   save_object(p, io, x)
   write(io, OpCodes.STOP)

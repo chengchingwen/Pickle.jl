@@ -223,7 +223,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.NEWOBJ_EX}, arg)
   push!(p.stack, res)
 end
 
-objectname(T) = string(Base.typename(typeof(T)))
+objtypename(T) = string(Base.typename(typeof(T)))
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   args = pop!(p.stack)
@@ -231,7 +231,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   if obj isa Defer
     wrap!(obj, :build, args)
   else
-    build = lookup(p.mt, "__build__", objectname(obj)) # hack for dispatch
+    build = lookup(p.mt, "__build__", objtypename(obj)) # hack for dispatch
     if isnothing(build)
       newobj = Defer(:build, obj, args)
     else

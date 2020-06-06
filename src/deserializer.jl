@@ -173,8 +173,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
   updatefirst!(p.stack, res)
 end
 
-execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg
-
+execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg "imcompatible protocol version: require version >= $arg"
 
 # FRAMEING is ignored, but can be added if we found performance is bounded by io
 for op in :(STOP, FRAME).args

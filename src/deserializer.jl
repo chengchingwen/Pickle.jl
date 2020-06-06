@@ -169,7 +169,8 @@ end
 function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
   args = pop!(p.stack)
   f = first(p.stack)
-  res = f isa Defer ? wrap!(f, :reduce, args) : f(args...)
+  res = f isa Defer ? Defer(:reduce, f, args...) : f(args...)
+
   updatefirst!(p.stack, res)
 end
 

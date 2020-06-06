@@ -10,7 +10,7 @@ TableBlock(depth) = TableBlock(depth, Dict())
 
 @inline haskey(tb::TableBlock, x) = haskey(tb.entry, x)
 
-function _setentry!(tb::TableBlock, value::Some, key; maxdepth=typemax(Int))
+function _setentry!(tb::TableBlock, value, key; maxdepth=typemax(Int))
   (haskey(tb, key) || !any(isequal('.'), key) || tb.depth >= maxdepth) &&
     return setindex!(tb.entry, value, key)
 

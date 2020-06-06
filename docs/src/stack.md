@@ -1,6 +1,6 @@
 # Stack Machine 
 
-The pickle format is a bunch of stack machine opcode and arguments that controll the stack machine to execute commmands and build the same object.
+The pickle is composed of opcodes and arguments that control over stack machine. A stack machine will be executed with commands and rebuild the same object.
 
 ```@autodocs
 Modules = [Pickle.OpCodes]

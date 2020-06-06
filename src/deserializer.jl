@@ -26,10 +26,14 @@ end
 
 for op in :(INT, LONG, LONG1, LONG4,
             STRING, BINSTRING, SHORT_BINSTRING,
-            BINBYTES, SHORT_BINBYTES, BINBYTES8, BYTEARRAY8,
+            BYTEARRAY8,
             UNICODE, SHORT_BINUNICODE, BINUNICODE, BINUNICODE8,
             FLOAT, BINFLOAT).args
   @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, arg)
+end
+
+for op in :(BINBYTES, SHORT_BINBYTES, BINBYTES8).args
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, codeunits(String(arg)))
 end
 
 for op in :(BININT, BININT1, BININT2).args

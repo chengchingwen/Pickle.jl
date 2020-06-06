@@ -124,7 +124,7 @@ execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE3}, arg) = push!(p.stack, reverse
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.DICT}, arg)
   pairs = unmark!(p.stack)
-  push!(p.stack, Dict(items[i]=>items[i+1] for i = 1:2:length(items)))
+  push!(p.stack, Dict(pairs[i]=>pairs[i+1] for i = 1:2:length(pairs)))
 end
 
 execute!(p::AbstractPickle, ::Val{OpCodes.POP}, arg) =

@@ -10,6 +10,8 @@ if VERSION < v"1.1"
     isnothing(::Any) = false
 end
 
+export load, store, loads, stores, AbstractPickle, Pickler
+
 include("./readarg.jl")
 include("./writearg.jl")
 include("./opcode/opcode.jl")

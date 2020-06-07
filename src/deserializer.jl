@@ -1,92 +1,13 @@
-import Base: push!, pop!, first, isempty, show, setindex!, getindex
-
-import Serialization
-using Serialization: AbstractSerializer
-
-using DataStructures
-
-const DEFAULT_PROTO = 4
-
-abstract type AbstractPickle <: AbstractSerializer end
-
-struct PickleStack
-  meta::Stack{Stack{Any}}
-end
-
-function PickleStack()
-  meta = Stack{Stack{Any}}()
-  s = PickleStack(meta)
-  mark!(s)
-	return s
-end
-
-getstack(s::PickleStack) = first(s.meta)
-@inline isempty(s::PickleStack) = isempty(getstack(s))
-@inline push!(s::PickleStack, @nospecialize(x)) = push!(getstack(s), x)
-@inline pop!(s::PickleStack) = pop!(getstack(s))
-@inline pop2!(s::PickleStack) = (pop!(s), pop!(s))
-@inline pop3!(s::PickleStack) = (pop!(s), pop!(s), pop!(s))
-@inline first(s::PickleStack) = first(getstack(s))
-@inline mark!(s::PickleStack) = push!(s.meta, Stack{Any}())
-@inline unmark!(s::PickleStack) = collect(reverse_iter(pop!(s.meta)))
-@inline updatefirst!(s::PickleStack, @nospecialize(x)) = (pop!(s); push!(s, x))
-@inline maybeupdatefirst!(s::PickleStack, @nospecialize(x)) =
-  objectid(first(s)) == objectid(x) ? nothing : updatefirst!(s, x)
-
-struct Memo
-  data::Dict{Int, Any}
-  ref::IdDict{Any, Int}
-end
-
-function Memo(data)
-  ref = IdDict{Any, Int}()
-  for (k, v) in data
-    ref[v] = k
-  end
-  return Memo(data, ref)
-end
-
-function setindex!(m::Memo, @nospecialize(value), key)
-  setindex!(m.ref, key, value)
-  setindex!(m.data, value, key)
-end
-
-getindex(m::Memo, key) = getindex(m.data, key)
-hasref(m::Memo, @nospecialize(key)) = haskey(m.ref, key)
-
-@inline function maybeupdate!(m::Memo, key, value)
-  @nospecialize key value
-  objectid(key) == objectid(value) ? nothing : update!(m, key, value)
-end
-
-@inline function update!(m::Memo, key, value)
-  @nospecialize key value
-  mid = m.ref[key]
-  objectid(key) != objectid(value) && delete!(m.ref, key)
-  setindex!(m, value, mid)
-end
-
-struct Pickler{PROTO} <: AbstractPickle
-  memo::Memo
-  stack::PickleStack
-  mt::HierarchicalTable
-end
-
-Pickler(proto=DEFAULT_PROTO, memo=Dict()) = Pickler{proto}(Memo(memo), PickleStack(), HierarchicalTable())
-
-protocol(::Pickler{P}) where {P} = P
-isbinary(pklr::Pickler) = protocol(pklr) >= 1
-
 deserialize(file::AbstractString) = Serialization.deserialize(Pickler(), file)
 Serialization.deserialize(p::AbstractPickle, file::AbstractString) = open(file, "r") do io
   Serialization.deserialize(p,  io)
 end
 Serialization.deserialize(p::AbstractPickle, io::IO) = load(p, io)
 
-loads(s) = loads(Pickler(), s)
+loads(s; proto=DEFAULT_PROTO) = loads(Pickler(proto), s)
 loads(p::AbstractPickle, s) = load(p, IOBuffer(s))
 
-load(io::IO) = load(Pickler(), io)
+load(io::IO; proto=DEFAULT_PROTO) = load(Pickler(proto), io)
 function load(p::AbstractPickle, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)
@@ -105,10 +26,14 @@ end
 
 for op in :(INT, LONG, LONG1, LONG4,
             STRING, BINSTRING, SHORT_BINSTRING,
-            BINBYTES, SHORT_BINBYTES, BINBYTES8, BYTEARRAY8,
+            BYTEARRAY8,
             UNICODE, SHORT_BINUNICODE, BINUNICODE, BINUNICODE8,
             FLOAT, BINFLOAT).args
   @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, arg)
+end
+
+for op in :(BINBYTES, SHORT_BINBYTES, BINBYTES8).args
+  @eval execute!(p::AbstractPickle, ::Val{OpCodes.$op}, arg) = push!(p.stack, codeunits(String(arg)))
 end
 
 for op in :(BININT, BININT1, BININT2).args
@@ -192,14 +117,14 @@ end
 execute!(p::AbstractPickle, ::Val{OpCodes.LIST}, arg) = push!(p.stack, unmark!(p.stack))
 execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE}, arg) = push!(p.stack, Tuple(unmark!(p.stack)))
 
-execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE1}, arg) = push!(p.stack, Tuple(pop!(p.stack)))
+execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE1}, arg) = push!(p.stack, tuple(pop!(p.stack)))
 execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE2}, arg) = push!(p.stack, reverse(pop2!(p.stack)))
 
 execute!(p::AbstractPickle, ::Val{OpCodes.TUPLE3}, arg) = push!(p.stack, reverse(pop3!(p.stack)))
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.DICT}, arg)
   pairs = unmark!(p.stack)
-  push!(p.stack, Dict(items[i]=>items[i+1] for i = 1:2:length(items)))
+  push!(p.stack, Dict(pairs[i]=>pairs[i+1] for i = 1:2:length(pairs)))
 end
 
 execute!(p::AbstractPickle, ::Val{OpCodes.POP}, arg) =
@@ -245,11 +170,11 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
   args = pop!(p.stack)
   f = first(p.stack)
   res = f isa Defer ? Defer(:reduce, f, args...) : f(args...)
+
   updatefirst!(p.stack, res)
 end
 
-execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg
-
+execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg "imcompatible protocol version: require version >= $arg"
 
 # FRAMEING is ignored, but can be added if we found performance is bounded by io
 for op in :(STOP, FRAME).args
@@ -257,13 +182,13 @@ for op in :(STOP, FRAME).args
 end
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.PERSID}, arg)
-  f = lookup(p.mt, "__main__", "persistent_load")
+  f = lookup(p.mt, "persistent_load")
   obj = isnothing(f) ? Defer(:persistent_load, arg) : f(arg)
   push!(p.stack, obj)
 end
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.BINPERSID}, arg)
-  f = lookup(p.mt, "__main__", "persistent_load")
+  f = lookup(p.mt, "persistent_load")
   pid = pop!(p.stack)
   obj = isnothing(f) ? Defer(:persistent_load, pid) : f(pid)
   push!(p.stack, obj)
@@ -299,7 +224,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.NEWOBJ_EX}, arg)
   push!(p.stack, res)
 end
 
-objectname(T) = string(Base.typename(typeof(T)))
+objtypename(T) = string(Base.typename(typeof(T)))
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   args = pop!(p.stack)
@@ -307,7 +232,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   if obj isa Defer
     wrap!(obj, :build, args)
   else
-    build = lookup(p.mt, "__build__", objectname(obj))
+    build = lookup(p.mt, "__build__", objtypename(obj)) # hack for dispatch
     if isnothing(build)
       newobj = Defer(:build, obj, args)
     else

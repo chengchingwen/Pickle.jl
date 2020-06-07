@@ -19,18 +19,18 @@ using Base.Enums: namemap
     STRING             = codepoint('S')
     BINSTRING          = codepoint('T')
     SHORT_BINSTRING    = codepoint('U')
-    # bytes (protocal 3 and higher)
+    # bytes (protocol 3 and higher)
     BINBYTES           = codepoint('B')
     SHORT_BINBYTES     = codepoint('C')
     BINBYTES8          = 0x8e
-    # bytearray (protocal 5 and higher)
+    # bytearray (protocol 5 and higher)
     BYTEARRAY8         = 0x96
     # out-of-band buffer (protocol 5 and higher)
     NEXT_BUFFER        = 0x97
     READONLY_BUFFER    = 0x98
     # none
     NONE               = codepoint('N')
-    # bool (protocal 2 and higher)
+    # bool (protocol 2 and higher)
     NEWTRUE            = 0x88
     NEWFALSE           = 0x89
     # unicode string
@@ -112,74 +112,57 @@ include("./opcode_desc.jl")
 return the argument reader of an OpCode.
 """
 argument(op::OpCode) = argument(Val(op))
-argument(::Val{INT}) = Pickle.read_decimalnl_short
-argument(::Val{BININT}) = Pickle.read_int4
-argument(::Val{BININT1}) = Pickle.read_uint1
-argument(::Val{BININT2}) = Pickle.read_uint2
-argument(::Val{LONG}) = Pickle.read_decimalnl_long
-argument(::Val{LONG1}) = Pickle.read_long1
-argument(::Val{LONG4}) = Pickle.read_long4
-argument(::Val{STRING}) = Pickle.read_stringnl
-argument(::Val{BINSTRING}) = Pickle.read_string4
-argument(::Val{SHORT_BINSTRING}) = Pickle.read_string1
-argument(::Val{BINBYTES}) = Pickle.read_bytes4
-argument(::Val{SHORT_BINBYTES}) = Pickle.read_bytes1
-argument(::Val{BINBYTES8}) = Pickle.read_bytes8
-argument(::Val{BYTEARRAY8}) = Pickle.read_bytearray8
-argument(::Val{NEXT_BUFFER}) = nothing
-argument(::Val{READONLY_BUFFER}) = nothing
-argument(::Val{NONE}) = nothing
-argument(::Val{NEWTRUE}) = nothing
-argument(::Val{NEWFALSE}) = nothing
-argument(::Val{UNICODE}) = Pickle.read_unicodestringnl
-argument(::Val{SHORT_BINUNICODE}) = Pickle.read_unicodestring1
-argument(::Val{BINUNICODE}) = Pickle.read_unicodestring4
-argument(::Val{BINUNICODE8}) = Pickle.read_unicodestring8
-argument(::Val{FLOAT}) = Pickle.read_floatnl
-argument(::Val{BINFLOAT}) = Pickle.read_float8
-argument(::Val{EMPTY_LIST}) = nothing
-argument(::Val{APPEND}) = nothing
-argument(::Val{APPENDS}) = nothing
-argument(::Val{LIST}) = nothing
-argument(::Val{EMPTY_TUPLE}) = nothing
-argument(::Val{TUPLE}) = nothing
-argument(::Val{TUPLE1}) = nothing
-argument(::Val{TUPLE2}) = nothing
-argument(::Val{TUPLE3}) = nothing
-argument(::Val{EMPTY_DICT}) = nothing
-argument(::Val{DICT}) = nothing
-argument(::Val{SETITEM}) = nothing
-argument(::Val{SETITEMS}) = nothing
-argument(::Val{EMPTY_SET}) = nothing
-argument(::Val{ADDITEMS}) = nothing
-argument(::Val{FROZENSET}) = nothing
-argument(::Val{POP}) = nothing
-argument(::Val{DUP}) = nothing
-argument(::Val{MARK}) = nothing
-argument(::Val{POP_MARK}) = nothing
-argument(::Val{GET}) = Pickle.read_decimalnl_short
-argument(::Val{BINGET}) = Pickle.read_uint1
-argument(::Val{LONG_BINGET}) = Pickle.read_uint4
-argument(::Val{PUT}) = Pickle.read_decimalnl_short
-argument(::Val{BINPUT}) = Pickle.read_uint1
-argument(::Val{LONG_BINPUT}) = Pickle.read_uint4
-argument(::Val{MEMOIZE}) = nothing
-argument(::Val{EXT1}) = Pickle.read_uint1
-argument(::Val{EXT2}) = Pickle.read_uint2
-argument(::Val{EXT4}) = Pickle.read_int4
-argument(::Val{GLOBAL}) = Pickle.read_stringnl_noescape_pair
-argument(::Val{STACK_GLOBAL}) = nothing
-argument(::Val{REDUCE}) = nothing
-argument(::Val{BUILD}) = nothing
-argument(::Val{INST}) = Pickle.read_stringnl_noescape_pair
-argument(::Val{OBJ}) = nothing
-argument(::Val{NEWOBJ}) = nothing
-argument(::Val{NEWOBJ_EX}) = nothing
-argument(::Val{PROTO}) = Pickle.read_uint1
-argument(::Val{STOP}) = nothing
-argument(::Val{FRAME}) = Pickle.read_uint8
-argument(::Val{PERSID}) = Pickle.read_stringnl_noescape
-argument(::Val{BINPERSID}) = nothing
+
+const OP_ARG_MAP = (
+  :(INT, GET, PUT,)            => :read_decimalnl_short,
+  :(LONG,)                     => :read_decimalnl_long,
+  :(BININT, EXT4,)             => :read_int4,
+  :(BININT1, BINGET, BINPUT,
+    EXT1, PROTO,)              => :read_uint1,
+  :(BININT2, EXT2,)            => :read_uint2,
+  :(LONG_BINGET, LONG_BINPUT,) => :read_uint4,
+  :(FRAME,)                    => :read_uint8,
+  :(LONG1,)                    => :read_long1,
+  :(LONG4,)                    => :read_long4,
+  :(STRING,)                   => :read_stringnl,
+  :(SHORT_BINSTRING,)          => :read_string1,
+  :(BINSTRING,)                => :read_string4,
+  :(SHORT_BINBYTES,)           => :read_bytes1,
+  :(BINBYTES,)                 => :read_bytes4,
+  :(BINBYTES8,)                => :read_bytes8,
+  :(BYTEARRAY8,)               => :read_bytearray8,
+  :(UNICODE,)                  => :read_unicodestringnl,
+  :(SHORT_BINUNICODE,)         => :read_unicodestring1,
+  :(BINUNICODE,)               => :read_unicodestring4,
+  :(BINUNICODE8,)              => :read_unicodestring8,
+  :(FLOAT,)                    => :read_floatnl,
+  :(BINFLOAT,)                 => :read_float8,
+  :(PERSID,)                   => :read_stringnl_noescape,
+  :(GLOBAL, INST,)             => :read_stringnl_noescape_pair,
+  :(NEXT_BUFFER, READONLY_BUFFER,
+    NONE, NEWTRUE, NEWFALSE,
+    EMPTY_LIST, APPEND, APPENDS, LIST,
+    EMPTY_TUPLE, TUPLE, TUPLE1, TUPLE2, TUPLE3,
+    EMPTY_DICT, DICT, SETITEM, SETITEMS,
+    EMPTY_SET, ADDITEMS, FROZENSET,
+    POP, DUP, MARK, POP_MARK, MEMOIZE,
+    STACK_GLOBAL, REDUCE, BUILD,
+    OBJ, NEWOBJ, NEWOBJ_EX,
+    STOP, BINPERSID,)          => nothing,
+)
+
+
+for (ops, f) in OP_ARG_MAP
+  if isnothing(f)
+    for op in ops.args
+      @eval argument(::Val{$op}) = nothing
+    end
+  else
+    for op in ops.args
+      @eval argument(::Val{$op}) = Pickle.$f
+    end
+  end
+end
 
 function maybe_opcode(x)
     if x in keys(namemap(OpCode))

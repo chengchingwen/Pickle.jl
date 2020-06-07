@@ -104,4 +104,7 @@ include("./defaults.jl")
 include("./deserializer.jl")
 include("./serializer.jl")
 
+include("./torch/torch.jl")
+using .Torch
+
 end # module

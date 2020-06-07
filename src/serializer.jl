@@ -254,14 +254,20 @@ function batch_setitems(p::AbstractPickle, io::IO, x::Dict)
     foldl(1:batch:len; init=0) do state, bidx
       last = min(bidx+batch-1, len)
       if isequal(bidx, last)
-        (k, v), state = iterate(x, state)
+        (k, v), state = iszero(state) ?
+          iterate(x) :
+          iterate(x, state)
+
         save_object(p, io, k)
         save_object(p, io, v)
         write(io, OpCodes.SETITEM)
       else
         write(io, OpCodes.MARK)
         state = foldl(bidx:last; init=state) do state, idx
-          (k, v), state = iterate(x, state)
+          (k, v), state = iszero(state) ?
+            iterate(x) :
+            iterate(x, state)
+
           save_object(p, io, k)
           save_object(p, io, v)
           state

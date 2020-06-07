@@ -3,7 +3,6 @@ using InternedStrings
 # batch size for batch appends/setitems
 const BATCHSIZE = Ref(1000)
 
-serialize(file::AbstractString, x) = Serialization.serialize(Pickler(), file, x)
 Serialization.serialize(p::AbstractPickle, file::AbstractString, x) = open(file, "w+") do io
   Serialization.serialize(p, io, x)
 end
@@ -12,6 +11,7 @@ Serialization.serialize(p::AbstractPickle, io::IO, x) = store(p, io, x)
 stores(x; proto=DEFAULT_PROTO) = stores(Pickler(proto), x)
 stores(p, x) = sprint((io, x)->store(p, io, x), x)
 
+store(file::AbstractString, x; proto=DEFAULT_PROTO) = open(f->store(f, x; proto=proto), file, "w+")
 store(io::IO, x; proto=DEFAULT_PROTO) = store(Pickler(proto), io, x)
 function store(p::AbstractPickle, io::IO, @nospecialize(x))
   protocol(p) >= 2 && write_porotcol(p, io)

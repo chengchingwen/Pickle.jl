@@ -239,7 +239,7 @@ function save(p::AbstractPickle, io::IO, x::Vector)
   batch_appends(p, io, x)
 end
 
-function setitem(p::AbstractPickle, io::IO, x::Dict, k, v, state)
+function setitem(p::AbstractPickle, io::IO, x::Dict, state)
   (k, v), state = iszero(state) ?
     iterate(x) :
     iterate(x, state)
@@ -264,11 +264,11 @@ function batch_setitems(p::AbstractPickle, io::IO, x::Dict)
     foldl(1:batch:len; init=0) do state, bidx
       last = min(bidx+batch-1, len)
       if isequal(bidx, last)
-        setitem(p, io, x, k, v, state)
+        setitem(p, io, x, state)
         write(io, OpCodes.SETITEM)
       else
         write(io, OpCodes.MARK)
-        state = foldl((s, idx) -> setitem(p, io, x, k, v, s), bidx:last; init=state)
+        state = foldl((s, idx) -> setitem(p, io, x, s), bidx:last; init=state)
         write(io, OpCodes.SETITEMS)
       end
       state

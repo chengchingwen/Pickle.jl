@@ -53,7 +53,7 @@ getindex(ht::HierarchicalTable, key) = something(_getentry(ht.head, key; maxdept
 
 haskey(ht::HierarchicalTable, key) = !isnothing(_getentry(ht.head, key))
 
-const GLOBAL_MT = HierarchicalTable()
+const GLOBAL_MT = default_methods!(HierarchicalTable())
 
 lookup(mt::HierarchicalTable, scope, name) = lookup(mt, join((scope, name), '.'))
 function lookup(mt::HierarchicalTable, key)

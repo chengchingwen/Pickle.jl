@@ -17,6 +17,7 @@ include("./writearg.jl")
 include("./opcode/opcode.jl")
 using .OpCodes
 
+include("./defaults.jl")
 include("./mt_table.jl")
 
 import Base: push!, pop!, first, isempty, show, setindex!, getindex, length
@@ -93,14 +94,12 @@ end
 
 function Pickler(proto=DEFAULT_PROTO, memo=Dict())
   mt = HierarchicalTable()
-  default_methods!(mt)
   Pickler{proto}(Memo(memo), PickleStack(), mt)
 end
 
 protocol(::Pickler{P}) where {P} = P
 isbinary(pklr::Pickler) = protocol(pklr) >= 1
 
-include("./defaults.jl")
 include("./deserializer.jl")
 include("./serializer.jl")
 

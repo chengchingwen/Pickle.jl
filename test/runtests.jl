@@ -64,7 +64,10 @@ const tests = [
   "store",
 ]
 
+Pickle.BATCHSIZE[] = 3
+
 @testset "Pickle" begin
+  @info "BATCHSIZE is set to: $(Pickle.BATCHSIZE[])"
   @info "Test doctest"
   doctest(Pickle)
 

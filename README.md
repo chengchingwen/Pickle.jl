@@ -1,5 +1,10 @@
 # Pickle.jl
 
+[![Build Status](https://travis-ci.com/chengchingwen/Pickle.jl.svg?branch=master)](https://travis-ci.com/chengchingwen/Pickle.jl)
+[![codecov](https://codecov.io/gh/chengchingwen/Pickle.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/chengchingwen/Pickle.jl)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://chengchingwen.github.io/Pickle.jl/dev/)
+
+
 An experimental package for loading and saving object in Python Pickle format.
 
 ## Supports

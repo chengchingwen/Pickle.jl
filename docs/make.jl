@@ -9,3 +9,7 @@ makedocs(sitename="Pickle.jl",
            ]
          ],
          )
+
+deploydocs(
+    repo = "github.com/chengchingwen/Pickle.jl.git",
+)

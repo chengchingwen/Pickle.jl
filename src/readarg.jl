@@ -252,7 +252,14 @@ true
 function read_unicodestringnl(io::IO)
     data = readline(io; keep=true)
     data[end] != '\n' && error("no newline found when trying to read unicodestringnl")
-    data = data[1:end-1]
+
+    if endswith(data, "\r\n") # handle windows newline
+        nl_idx = lastindex(data) - 1
+    else
+        nl_idx = lastindex(data)
+    end
+
+    data = data[1:nl_idx-1]
     return unescape_string(data)
 end
 

@@ -94,17 +94,23 @@ function read_stringnl(io::IO; decode=true, stripquotes=true)
     data = readline(io; keep=true)
     data[end] != '\n' && error("no newline found when trying to read stringnl")
 
+    if endswith(data, "\r\n") # handle windows newline
+        nl_idx = lastindex(data) - 1
+    else
+        nl_idx = lastindex(data)
+    end
+
     if stripquotes
         isquote(c) = isequal('\'')(c) || isequal('\"')(c)
         start = first(data)
         !isquote(start) && error("no string quotes around $data")
 
-        endl = data[end-1]
+        endl = data[nl_idx-1]
         !isequal(start, endl) && error("string quote $start not found at both end of $data")
 
-        data = data[2:end-2]
+        data = data[2:nl_idx-2]
     else
-        data = data[1:end-1]
+        data = data[1:nl_idx-1]
     end
 
     if decode

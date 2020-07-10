@@ -12,6 +12,16 @@ import Base: setindex!, getindex, haskey
   BOOL
 end
 
+jltype2dtype(::Type{Float32}) = FLOAT
+jltype2thtype(::Type{Float64}) = DOUBLE
+jltype2thtype(::Type{Float16}) = HALF
+jltype2thtype(::Type{UInt8}) = UINT8
+jltype2thtype(::Type{Int8}) = INT8
+jltype2thtype(::Type{Int16}) = SHORT
+jltype2thtype(::Type{Int32}) = INT
+jltype2thtype(::Type{Int64}) = LONG
+jltype2thtype(::Type{Bool}) = BOOL
+
 function dtype2jltype(t::DType)
   if t == FLOAT
     return Float32

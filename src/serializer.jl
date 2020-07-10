@@ -305,7 +305,7 @@ function save_global(p::AbstractPickle, io::IO, Tname)
   else
     pname = lookup(p.mt, "__julia__", Tname)
     @assert !isnothing(pname) "python name for `$Tname` is not registered."
-    module_name, name = split(pname, '.'; limit=2)
+    module_name, name = rsplit(pname, '.'; limit=2)
     if protocol(p) >= 4
       save_object(p, io, module_name)
       save_object(p, io, name)

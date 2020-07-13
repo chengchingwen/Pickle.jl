@@ -1,5 +1,6 @@
 using InternedStrings
-using ..Pickle: store, save_global, save_object, memoize, OpCodes
+using Strided
+using ..Pickle: store, save_global, save_object, memoize, OpCodes, hasref
 import ..Pickle: save
 
 const THTensorElType = Union{Float64, Float32, Float16, UInt8,
@@ -27,14 +28,17 @@ function THsave(tp::TorchPickler, io, x)
   write_storage(io, tp.storage)
 end
 
-function save(p::TorchPickler, io::IO, x::A) where {T <: THTensorElType, A <: AbstractArray{T}}
+Strided.StridedView(x::PermutedDimsArray{T,N,perm}) where {T,N,perm} = permutedims(StridedView(x.parent), perm)
+
+save(p::TorchPickler, io::IO, a::A) where {T <: THTensorElType, A <: AbstractArray{T}} = save(p, io, StridedView(a))
+function save(p::TorchPickler, io::IO, x::S) where {T <: THTensorElType, S <: StridedView{T}}
   save_global(p, io, i"__torch__.rebuild_tensor")
 
   write(io, OpCodes.MARK)
-  save_storage(p, io, x)
-  save(p, io, 0)
-  save_object(p, io, size(x))
-  save_object(p, io, strides(x))
+  save_storage(p, io, x.parent)
+  save(p, io, x.offset)
+  save_object(p, io, x.size)
+  save_object(p, io, x.strides)
   save(p, io, false)
   save_global(p, io, i"OrderedDict")
   write(io, OpCodes.EMPTY_TUPLE)
@@ -44,6 +48,8 @@ function save(p::TorchPickler, io::IO, x::A) where {T <: THTensorElType, A <: Ab
 end
 
 function save_storage(p::TorchPickler, io::IO, x::AbstractArray{T}) where T
+  hasref(p.memo, x) && return save_get(p, io, x)
+
   write(io, OpCodes.MARK)
 
   save_object(p, io, i"storage")

@@ -47,8 +47,14 @@ function save(p::TorchPickler, io::IO, x::S) where {T <: THTensorElType, S <: St
   write(io, OpCodes.REDUCE)
 end
 
+"dummy type for storage type."
+struct StorageTensor{T}
+  arr::T
+end
+
 function save_storage(p::TorchPickler, io::IO, x::AbstractArray{T}) where T
-  hasref(p.memo, x) && return save_get(p, io, x)
+  s = StorageTensor(x)
+  hasref(p.memo, s) && return save_get(p, io, s)
 
   write(io, OpCodes.MARK)
 
@@ -62,7 +68,7 @@ function save_storage(p::TorchPickler, io::IO, x::AbstractArray{T}) where T
   write(io, OpCodes.TUPLE)
   write(io, OpCodes.BINPERSID)
 
-  memoize(p, io, x)
+  memoize(p, io, s)
   p.storage[string(objectid(x))] = (jltype2dtype(T), length(x), i"cpu", x)
 
 end

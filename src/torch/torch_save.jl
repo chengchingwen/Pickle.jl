@@ -12,8 +12,8 @@ end
 
 function THsave(tp::TorchPickler, io, x)
   global MAGIC, TORCH_PROTOCOL
-  store(io, MAGIC)
-  store(io, TORCH_PROTOCOL)
+  store(io, MAGIC; proto=protocol(tp))
+  store(io, TORCH_PROTOCOL; proto=protocol(tp))
   store(io,
         Dict(
           "little_endian" => Base.ENDIAN_BOM == 0x04030201,
@@ -21,10 +21,10 @@ function THsave(tp::TorchPickler, io, x)
           "type_sizes" => Dict(
             "int"=>4,"long"=>4,"short"=>2
           )
-        ))
+        ); proto=protocol(tp))
 
   store(tp, io, x)
-  store(io, collect(keys(tp.storage.data)))
+  store(io, collect(keys(tp.storage.data)); proto=protocol(tp))
   write_storage(io, tp.storage)
 end
 

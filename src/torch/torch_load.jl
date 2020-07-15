@@ -22,8 +22,22 @@ function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
   # some corresponding methods
   mt["collections.OrderedDict"] = OrderedDict
   mt["torch._utils._rebuild_tensor_v2"] = (arg...) -> build_tensor(st, arg...)
+
+  mt["__julia__.__torch__.rebuild_tensor"] = "torch._utils._rebuild_tensor_v2"
+  mt["__julia__.OrderedDict"] = "collections.OrderedDict"
+  mt["__julia__.__torch__.StorageType.Float32"] = "torch.FloatStorage"
+  mt["__julia__.__torch__.StorageType.Float64"] = "torch.DoubleStorage"
+  mt["__julia__.__torch__.StorageType.Float16"] = "torch.HalfStorage"
+  mt["__julia__.__torch__.StorageType.UInt8"] = "torch.ByteStorage"
+  mt["__julia__.__torch__.StorageType.Int8"] = "torch.CharStorage"
+  mt["__julia__.__torch__.StorageType.Int16"] = "torch.ShortStorage"
+  mt["__julia__.__torch__.StorageType.Int32"] = "torch.IntStorage"
+  mt["__julia__.__torch__.StorageType.Int64"] = "torch.LongStorage"
+  mt["__julia__.__torch__.StorageType.Bool"] = "torch.BoolStorage"
+
   # ingore state_dict version number
   mt["__build__.OrderedCollections.OrderedDict"] = (od, _meta) -> od
+  mt["__build__.OrderedDict"] = (od, _meta...) -> od
 
   TorchPickler{proto}(Memo(memo), PickleStack(), mt, st)
 end

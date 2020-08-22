@@ -204,7 +204,15 @@ function save(p::AbstractPickle, io::IO, x::T) where {N, T <: NTuple{N, Any}}
   end
 end
 
-function batch_appends(p::AbstractPickle, io::IO, x::Vector)
+"dummy type for dispatching python list-like object"
+struct List{A}
+  x::A
+  List(x::Vector) = new{typeof(x)}(x)
+end
+List(x::Array) = error("multi-dimensional array is not compatible with python list.")
+
+function batch_appends(p::AbstractPickle, io::IO, l::List)
+  x = l.x
   if !isbinary(p)
     for i in x
       save_object(p, io, i)
@@ -228,7 +236,8 @@ function batch_appends(p::AbstractPickle, io::IO, x::Vector)
   end
 end
 
-function save(p::AbstractPickle, io::IO, x::Vector)
+function save(p::AbstractPickle, io::IO, l::List)
+  x = l.x
   if isbinary(p)
     write(io, OpCodes.EMPTY_LIST)
   else
@@ -236,8 +245,9 @@ function save(p::AbstractPickle, io::IO, x::Vector)
     write(io, OpCodes.LIST)
   end
   memoize(p, io, x)
-  batch_appends(p, io, x)
+  batch_appends(p, io, l)
 end
+save(p::AbstractPickle, io::IO, x::AbstractArray) = save(p, io, List(x))
 
 function setitem(p::AbstractPickle, io::IO, x::Dict, state)
   (k, v), state = iszero(state) ?
@@ -295,7 +305,7 @@ function save_global(p::AbstractPickle, io::IO, Tname)
   else
     pname = lookup(p.mt, "__julia__", Tname)
     @assert !isnothing(pname) "python name for `$Tname` is not registered."
-    module_name, name = split(pname, '.'; limit=2)
+    module_name, name = rsplit(pname, '.'; limit=2)
     if protocol(p) >= 4
       save_object(p, io, module_name)
       save_object(p, io, name)

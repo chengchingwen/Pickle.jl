@@ -80,7 +80,7 @@ function build_tensor(sm::StorageManager, fake_storage, offset, tsize, tstride, 
     setindex!(sm, (dtype, numel, device, storage), key)
   end
 
-  if (tlength == numel) && (isone(length(tsize)) || isone(first(tstride)))
+  if (tlength == numel) && (isone(length(tsize)) || isempty(tsize) || isone(first(tstride)))
     tensor = reshape(storage, tsize) # f-contiguous
   else # otherwise use strided
     tensor = StridedView(storage, tsize, tstride, offset)

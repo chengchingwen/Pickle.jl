@@ -57,8 +57,8 @@ convert a Integer into 2's complement byte array (Vector{UInt8}).
 
 # Examples
 ```jldoctest
-julia> Pickle.int_to_bytes(0)
-0-element Array{UInt8,1}
+julia> Pickle.int_to_bytes(0) |> isempty # 0-element Array{UInt8,1}
+true
 
 julia> Pickle.int_to_bytes(255)
 2-element Array{UInt8,1}:

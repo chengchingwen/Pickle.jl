@@ -1,14 +1,22 @@
 @testset "LOAD" begin
 
-  bts0 = load("./test_pkl/builtin_type_p0.pkl")
-  @test builtin_type_samples == bts0
-  bts1 = load("./test_pkl/builtin_type_p1.pkl")
-  @test builtin_type_samples == bts1
-  bts2 = load("./test_pkl/builtin_type_p2.pkl")
-  @test builtin_type_samples == bts2
-  bts3 = load("./test_pkl/builtin_type_p3.pkl")
-  @test builtin_type_samples == bts3
-  bts4 = load("./test_pkl/builtin_type_p4.pkl")
-  @test builtin_type_samples == bts4
+  for i in 0:4
+    # test loading pre-saved files
+    bts = load("./test_pkl/builtin_type_p$(i).pkl")
+    @test builtin_type_samples == bts
+
+    # test loading from string
+    sbts = loads(py"pystores(builtin_type_samples, $i)")
+    @test builtin_type_samples == sbts
+  end
+
+  mktempdir() do path
+    for i in 0:4
+      # test loading from directly saved file
+      file = joinpath(path, "pybuiltin_type_p$i.pkl")
+      py"pystore($file, builtin_type_samples, $i)"
+      @test builtin_type_samples == load(file)
+    end
+  end
 
 end

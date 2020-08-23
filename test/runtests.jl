@@ -3,6 +3,7 @@ using Test, Serialization, Documenter, Pickle, PyCall
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
 include("./pyscript.jl")
+include("./torch/thscript.jl")
 
 builtin_type_samples = Dict(
   "str" => "Julia!",
@@ -36,4 +37,8 @@ Pickle.BATCHSIZE[] = 3
     @info "Test $(uppercase(t))"
     include(fp)
   end
+
+  @info "Test Pickle.Torch"
+  include("./torch/torch.jl")
+
 end

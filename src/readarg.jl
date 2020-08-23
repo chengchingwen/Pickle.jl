@@ -173,8 +173,8 @@ read_string4(io::IO) = read_multiple(io, String, "string4", read_int4)
 @doc raw"""
 # Examples
 ```jldoctest
-julia> Pickle.read_bytes1(IOBuffer(b"\x00"))
-0-element Array{UInt8,1}
+julia> Pickle.read_bytes1(IOBuffer(b"\x00")) |> isempty # 0-element Array{UInt8,1}
+true
 
 julia> Pickle.read_bytes1(IOBuffer(b"\x03abcdef"))
 3-element Array{UInt8,1}:
@@ -191,8 +191,8 @@ read_bytes1(io::IO) = read_multiple(io, "bytes1", read_uint1)
 @doc raw"""
 # Examples
 ```jldoctest
-julia> Pickle.read_bytes4(IOBuffer(b"\x00\x00\x00\x00abc"))
-0-element Array{UInt8,1}
+julia> Pickle.read_bytes4(IOBuffer(b"\x00\x00\x00\x00abc")) |> isempty # 0-element Array{UInt8,1}
+true
 
 julia> Pickle.read_bytes4(IOBuffer(b"\x03\x00\x00\x00abcdef"))
 3-element Array{UInt8,1}:
@@ -210,8 +210,8 @@ read_bytes4(io::IO) = read_multiple(io, "bytes4", read_uint4)
 @doc raw"""
 # Examples
 ```jldoctest
-julia> Pickle.read_bytes8(IOBuffer(b"\x00\x00\x00\x00\x00\x00\x00\x00abc"))
-0-element Array{UInt8,1}
+julia> Pickle.read_bytes8(IOBuffer(b"\x00\x00\x00\x00\x00\x00\x00\x00abc")) |> isempty # 0-element Array{UInt8,1}
+true
 
 julia> Pickle.read_bytes8(IOBuffer(b"\x03\x00\x00\x00\x00\x00\x00\x00abcdef"))
 3-element Array{UInt8,1}:
@@ -230,8 +230,8 @@ read_bytes8(io::IO) = read_multiple(io, "bytes8", read_uint8)
 @doc raw"""
 # Examples
 ```jldoctest
-julia> Pickle.read_bytearray8(IOBuffer(b"\x00\x00\x00\x00\x00\x00\x00\x00abc"))
-0-element Array{UInt8,1}
+julia> Pickle.read_bytearray8(IOBuffer(b"\x00\x00\x00\x00\x00\x00\x00\x00abc")) |> isempty # 0-element Array{UInt8,1}
+true
 
 julia> Pickle.read_bytearray8(IOBuffer(b"\x03\x00\x00\x00\x00\x00\x00\x00abcdef"))
 3-element Array{UInt8,1}:

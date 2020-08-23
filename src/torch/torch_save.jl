@@ -1,6 +1,6 @@
 using InternedStrings
 using Strided
-using ..Pickle: store, save_global, save_object, memoize, OpCodes, hasref
+using ..Pickle: store, save_global, save_get, save_object, memoize, OpCodes, hasref
 import ..Pickle: save
 
 const THTensorElType = Union{Float64, Float32, Float16, UInt8,
@@ -47,10 +47,13 @@ function save(p::TorchPickler, io::IO, x::S) where {T <: THTensorElType, S <: St
   write(io, OpCodes.REDUCE)
 end
 
-"dummy type for storage type."
-struct StorageTensor{T}
-  arr::T
+"dummy type for storage type. This is use to inform julia that some arrays are actually the same
+ since `objectid` is not consistent on array with same data."
+struct StorageTensor{P}
+  ptr::P
 end
+
+StorageTensor(x::A) where {A<:AbstractArray} = StorageTensor(pointer(x))
 
 function save_storage(p::TorchPickler, io::IO, x::AbstractArray{T}) where T
   s = StorageTensor(x)

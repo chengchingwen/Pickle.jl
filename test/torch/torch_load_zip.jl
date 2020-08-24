@@ -1,4 +1,4 @@
-@testset "LOAD" begin
+@testset "LOAD_ZIP" begin
 
   mktempdir() do path
     @testset "array" begin
@@ -10,7 +10,7 @@
       x4 = libtorch.randn((5,4,3,2))
       libtorch.save(Dict("x0"=>x0, "x1"=>x1,
                "x2"=>x2, "x3"=>x3, "x4"=>x4), file;
-               _use_new_zipfile_serialization=false)
+               _use_new_zipfile_serialization=true)
       load_arr = Torch.THload(file)
       @test load_arr["x0"] ≈ x0.numpy()
       @test load_arr["x1"] ≈ x1.numpy()
@@ -24,7 +24,7 @@
       file = joinpath(path, "slice.bin")
       x_slice = random_slice(x)
       libtorch.save([x, x_slice], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_slice = Torch.THload(file)
       load_x, load_slice = test_load_slice
       @test load_x ≈ x.numpy()
@@ -36,7 +36,7 @@
       file = joinpath(path, "stride.bin")
       x_stride = random_stride(x)
       libtorch.save([x, x_stride], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_stride = Torch.THload(file)
       load_x, load_stride = test_load_stride
       @test load_x ≈ x.numpy()
@@ -48,7 +48,7 @@
       file = joinpath(path, "reshape.bin")
       x_reshape = x.reshape(2,5,5,2)
       libtorch.save([x, x_reshape], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_reshape = Torch.THload(file)
       load_x, load_reshape = test_load_reshape
       @test load_x ≈ x.numpy()
@@ -60,7 +60,7 @@
       file = joinpath(path, "offset.bin")
       x_offset = pyslice(x.reshape(-1), 5).reshape(5, -1)
       libtorch.save([x, x_offset], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_offset = Torch.THload(file)
       load_x, load_offset = test_load_offset
       @test load_x ≈ x.numpy()
@@ -73,7 +73,7 @@
       x1 = x.clone()
       x2 = pyslice(x1, 5)
       libtorch.save([x1, x2], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_mutate = Torch.THload(file)
       load_x1, load_x2 = test_load_mutate
       set!(x2, 0, 0)
@@ -87,7 +87,7 @@
       file = joinpath(path, "transpose.bin")
       x_transpose = x.transpose(1, 0)
       libtorch.save([x, x_transpose], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_transpose = Torch.THload(file)
       load_x, load_transpose = test_load_transpose
       @test load_x ≈ x.numpy()
@@ -103,7 +103,7 @@
       x_transpose = x_slice.transpose(0,1)
       set!(x_transpose, (0,0), 0)
       libtorch.save([x, x_offset, x_stride, x_slice, x_transpose], file;
-                    _use_new_zipfile_serialization=false)
+                    _use_new_zipfile_serialization=true)
       test_load_all = Torch.THload(file)
       load_x, load_offset, load_stride, load_slice, load_transpose = test_load_all
       @test load_x ≈ x.numpy()

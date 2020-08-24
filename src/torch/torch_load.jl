@@ -46,6 +46,13 @@ end
 protocol(::TorchPickler{P}) where {P} = P
 isbinary(pklr::TorchPickler) = protocol(pklr) >= 1
 
+"""
+  THload(file::AbstractString)
+
+load data that saved by `torch.save`. `torch.tensor` 
+will be load as `Array` or `Strided.StridedView` 
+dependent on the memory layout of that tensor.
+"""
 THload(file::AbstractString) = open(file) do io
   THload(TorchPickler(), io)
 end

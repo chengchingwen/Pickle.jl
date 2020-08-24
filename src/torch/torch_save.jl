@@ -6,6 +6,12 @@ import ..Pickle: save
 const THTensorElType = Union{Float64, Float32, Float16, UInt8,
                              Int8, Int16, Int32, Int16, Bool}
 
+"""
+  THsave(file::AbstractString, x)
+
+save data that can be load by `torch.load`. `Array` and 
+`Strided.StridedView` will be treated as `torch.tensor`.
+"""
 THsave(file::AbstractString, x) = open(file, "w+") do io
   THsave(TorchPickler(), io, x)
 end

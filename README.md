@@ -5,7 +5,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://chengchingwen.github.io/Pickle.jl/dev/)
 
 
-An experimental package for loading and saving object in Python Pickle format.
+An experimental package for loading and saving object in Python Pickle and Torch Pickle format.
 
 ## Supports
 
@@ -116,5 +116,20 @@ Dict{Any,Any} with 9 entries:
   "tuple"  => (1, 2.0, "3", UInt8[0x34])
   "bool"   => Dict{Any,Any}(false=>true,true=>false)
   "float"  => 3.14159
+
+```
+
+
+## Pickle.Torch
+
+We also support loading/saving the tensor data from/for pytorch.
+
+```julia
+julia> Pickle.Torch.THsave("mydata.bin", [randn(3,5), randn(5)])
+
+julia> Pickle.Torch.THload("mydata.bin")
+2-element Array{Any,1}:
+ [1.5106877710095366 -1.1454729135625932 … 2.06558662039955 -1.5367586535984377; 0.039481538567394656 -0.32939192495490544 … 1.3092722093574312 -2.008938993198881; -1.208358021687811 1.207098188115399 … 0.40730876859947734 1.6270781822957923]
+ [-0.5909715360681883, -0.0948081699846433, -0.17734064360419854, 0.43085740457102734, -0.48091537835876497]
 
 ```

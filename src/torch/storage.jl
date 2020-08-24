@@ -1,4 +1,4 @@
-import Base: setindex!, getindex, haskey
+import Base: setindex!, getindex, haskey, pairs, keys, values
 
 @enum DType begin
   FLOAT
@@ -99,3 +99,6 @@ StorageManager() = StorageManager(Dict())
 setindex!(sm::StorageManager, value, key) = setindex!(sm.data, value, key)
 getindex(sm::StorageManager, key) = getindex(sm.data, key)
 haskey(sm, key) = haskey(sm.data, key)
+pairs(sm::StorageManager) = pairs(sm.data)
+keys(sm::StorageManager) = keys(sm.data)
+values(sm::StorageManager) = values(sm.data)

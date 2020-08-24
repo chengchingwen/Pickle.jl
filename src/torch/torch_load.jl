@@ -2,6 +2,7 @@ using ..Pickle: Memo, PickleStack, HierarchicalTable, load, isdefer
 
 using DataStructures
 using Strided
+using ZipFile
 
 const DEFAULT_PROTO = 2
 
@@ -50,6 +51,30 @@ THload(file::AbstractString) = open(file) do io
 end
 
 function THload(tp::TorchPickler, io)
+  if peek(io) == 0x80
+    return legacy_load(tp, io)
+  elseif read(io, 4) == b"PK\x03\x04"
+    z = ZipFile.Reader(io)
+    if any(x->x.name=="constants.pkl", z.files)
+      error("TorchScript archive not support.")
+    end
+    return zip_load(tp, z)
+  else
+    error("Unkown file format. Is this really a file from `torch.save`?")
+  end
+end
+
+function get_record(zipfile, name)
+  zipfile.files[findfirst(x->endswith(x.name, name), zipfile.files)]
+end
+
+function zip_load(tp::TorchPickler, zipfile)
+  typeinfo = load(tp, get_record(zipfile, "data.pkl"))
+  load_tensor_zip!(zipfile, tp.storage)
+  return typeinfo
+end
+
+function legacy_load(tp::TorchPickler, io)
   magic = load(tp, io)
   magic != MAGIC && error("Invalid magic number; corrupt file?")
   torch_protocol = load(tp, io)
@@ -59,7 +84,7 @@ function THload(tp::TorchPickler, io)
 
   typeinfo = load(tp, io)
   tensor_key = load(tp, io)
-  tensor_data = load_tensor(io, tp.storage, tensor_key)
+  load_tensor!(io, tp.storage, tensor_key)
   @assert !isdefer(typeinfo)
   return typeinfo
 end
@@ -67,7 +92,7 @@ end
 function build_tensor(sm::StorageManager, fake_storage, offset, tsize, tstride, grad, _)
   @assert length(tsize) == length(tstride)
   @assert fake_storage.head == :persistent_load
-  header, thtype, key, device, numel, _ = fake_storage.args[1]
+  header, thtype, key, device, numel, = fake_storage.args[1]
   @assert header == "storage"
   dtype = thtype2dtype(thtype)
   jltype = dtype2jltype(dtype)
@@ -89,12 +114,21 @@ function build_tensor(sm::StorageManager, fake_storage, offset, tsize, tstride, 
   return tensor
 end
 
-function load_tensor(io::IO, sm::StorageManager, tensor_key)
+function load_tensor!(io::IO, sm::StorageManager, tensor_key)
   for key in tensor_key
     type, numel, device, storage = sm[key]
     tsize = read(io, Int64)
     @assert tsize == numel
     tdata = read(io, tsize * bytewidth(type))
+    storage .= reinterpret(dtype2jltype(type), tdata)
+  end
+end
+
+function load_tensor_zip!(zipfile, sm::StorageManager)
+  for (key, values) in pairs(sm)
+    type, numel, device, storage = values
+    zf = get_record(zipfile, "data/$key")
+    tdata = read(zf)
     storage .= reinterpret(dtype2jltype(type), tdata)
   end
 end

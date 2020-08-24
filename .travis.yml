@@ -43,5 +43,3 @@ jobs:
 
   allow_failures:
     - julia: nightly
-    - os: osx
-    - os: windows

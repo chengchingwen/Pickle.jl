@@ -61,7 +61,7 @@ function THload(tp::TorchPickler, io)
   if peek(io) == 0x80
     return legacy_load(tp, io)
   elseif read(io, 4) == b"PK\x03\x04"
-    z = ZipFile.Reader(io)
+    @show z = ZipFile.Reader(io)
     if any(x->x.name=="constants.pkl", z.files)
       error("TorchScript archive not support.")
     end

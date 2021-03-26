@@ -1,6 +1,6 @@
 # Pickle.jl
 
-[![Build Status](https://travis-ci.com/chengchingwen/Pickle.jl.svg?branch=master)](https://travis-ci.com/chengchingwen/Pickle.jl)
+[![Build status](https://github.com/chengchingwen/Pickle.jl/workflows/CI/badge.svg)](https://github.com/chengchingwen/Pickle.jl/actions)
 [![codecov](https://codecov.io/gh/chengchingwen/Pickle.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/chengchingwen/Pickle.jl)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://chengchingwen.github.io/Pickle.jl/dev/)
 

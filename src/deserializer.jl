@@ -224,7 +224,13 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.NEWOBJ_EX}, arg)
   push!(p.stack, res)
 end
 
-objtypename(T) = string(Base.typename(typeof(T)))
+function objtypename(T)
+  namestr = string(Base.typename(typeof(T)))
+  if startswith(namestr, "typename(")
+    namestr = namestr[10:end-1]
+  end
+  return namestr
+end
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)
   args = pop!(p.stack)

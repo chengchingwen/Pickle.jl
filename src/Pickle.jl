@@ -41,7 +41,7 @@ getstack(s::PickleStack) = first(s.meta)
 @inline pop3!(s::PickleStack) = (pop!(s), pop!(s), pop!(s))
 @inline first(s::PickleStack) = first(getstack(s))
 @inline mark!(s::PickleStack) = push!(s.meta, Stack{Any}())
-@inline unmark!(s::PickleStack) = collect(reverse_iter(pop!(s.meta)))
+@inline unmark!(s::PickleStack) = collect(Iterators.reverse(pop!(s.meta)))
 @inline updatefirst!(s::PickleStack, @nospecialize(x)) = (pop!(s); push!(s, x))
 @inline maybeupdatefirst!(s::PickleStack, @nospecialize(x)) =
   objectid(first(s)) == objectid(x) ? nothing : updatefirst!(s, x)

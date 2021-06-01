@@ -81,7 +81,7 @@ function zip_load(tp::TorchPickler, zipfile)
   return typeinfo
 end
 
-function legacy_load(tp::TorchPickler, io)
+function unchecked_legacy_load(tp::TorchPickler, io)
   magic = load(tp, io)
   magic != MAGIC && error("Invalid magic number; corrupt file?")
   torch_protocol = load(tp, io)
@@ -92,8 +92,13 @@ function legacy_load(tp::TorchPickler, io)
   typeinfo = load(tp, io)
   tensor_key = load(tp, io)
   load_tensor!(io, tp.storage, tensor_key)
-  @assert !isdefer(typeinfo)
   return typeinfo
+end
+
+function legacy_load(tp::TorchPickler, io)
+    typeinfo = unchecked_legacy_load(tp, io)
+    @assert !isdefer(typeinfo)
+    return typeinfo
 end
 
 function build_tensor(sm::StorageManager, fake_storage, offset, tsize, tstride, grad, _)

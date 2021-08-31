@@ -162,7 +162,7 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.STACK_GLOBAL}, arg)
   name = pop!(p.stack)
   scope = pop!(p.stack)
   func = lookup(p.mt, scope, name)
-  obj = isnothing(func) ? Defer(Symbol(join(arg, '.'))) : func
+  obj = isnothing(func) ? Defer(Symbol(join((scope, name), '.'))) : func
   push!(p.stack, obj)
 end
 

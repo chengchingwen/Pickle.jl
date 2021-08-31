@@ -94,6 +94,9 @@ function npy_typechar_to_jltype(t, n)
     end
 end
 
+struct NString{N} end
+
+slen(::NString{N}) where N = N
 
 # TODO: handle dtype comprehensively
 # https://github.com/numpy/numpy/blob/eeef9d4646103c3b1afd3085f1393f2b3f9575b2/numpy/core/src/multiarray/descriptor.c#L2442
@@ -101,12 +104,17 @@ function np_dtype(obj, align, copy)
     align, copy = Bool(align), Bool(copy)
     @assert !align "structure dtype disallow"
     @assert copy
-    m = match(r"^([<=>])?([?bBiuf])(\d*)$", obj)
+    m = match(r"^([<=>])?([?bBiufU])(\d*)$", obj)
     @assert !isnothing(m) "unsupported dtype $obj: consider file an issue"
     ei, t, n = m.captures
     # '>': big, '<': little, '=': hardware-native
     islittle = ei == ">" ? false : ei == "<" ? true : islittle_endian()
-    T = npy_typechar_to_jltype(t, n)
+    if t == "U"
+        n = tryparse(Int, n)
+        T = NString{isnothing(n) ? 1 : n}()
+    else
+        T = npy_typechar_to_jltype(t, n)
+    end
     return NpyDtype{T}(islittle, obj, align, copy)
 end
 
@@ -114,25 +122,50 @@ function build_npydtype(npydtype, state)
     metadata = length(state) == 9 ? state[9] : nothing
     ver, ei, sub_descrip, _names, _fields, elsize, alignment, flags = state
 
+    T = eltype(npydtype)
     @assert isnothing(sub_descrip)
     @assert isnothing(_names)
     @assert isnothing(_fields)
-    @assert elsize == -1
-    @assert alignment == -1
-    @assert flags == 0
+    if T isa NString
+        n = slen(T)
+        @assert elsize == 4n
+        @assert alignment == 4
+        @assert flags == 8
+    else
+        @assert elsize == -1
+        @assert alignment == -1
+        @assert flags == 0
+    end
     # '>': big, '<': little, '=': hardware-native
     islittle = ei == ">" ? false : ei == "<" ? true : islittle_endian()
-    return NpyDtype{eltype(npydtype)}(islittle, npydtype.dstring, npydtype.align, npydtype.copy)
+    return NpyDtype{T}(islittle, npydtype.dstring, npydtype.align, npydtype.copy)
 end
 
 c2f(arr, shape) = PermutedDimsArray(reshape(arr, reverse(shape)), reverse(ntuple(identity, length(shape))))
+c2f(arr, shape, n) = c2f(arr, (shape..., n))
+
+function nstring(cs)
+    i = findfirst(isequal('\0'), cs)
+    return isnothing(i) ? String(cs) : String(@view(cs[1:i-1]))
+end
 
 # https://github.com/numpy/numpy/blob/6568c6b022e12ab6d71e7548314009ced6ccabe9/numpy/core/src/multiarray/methods.c#L1711
 # TODO: support picklebuffer (Pickle v5)
 function build_nparray(_, args)
     ver, shp, dtype, is_column_maj, data = args
-    _arr = reinterpret(eltype(dtype), data)
-    arr = is_column_maj ? reshape(_arr, shp) : c2f(_arr, shp)
-    return dtype.little_endian ? Base.ltoh.(arr) : Base.ntoh.(arr)
+    T = eltype(dtype)
+
+    if T isa NString
+        n = slen(T)
+        _data = reinterpret(UInt32, data)
+        _arr = dtype.little_endian ? Char.(Base.ltoh.(_data)) : Char.(Base.ntoh.(_data))
+        arr = is_column_maj ? reshape(_arr, n, shp...) : c2f(_arr, shp, n)
+        return reshape(mapslices(nstring, arr; dims=ndims(arr)), shp)
+    else
+        _data = reinterpret(T, data)
+        _arr = dtype.little_endian ? Base.ltoh.(_data) : Base.ntoh.(_data)
+        arr = is_column_maj ? reshape(_arr, shp) : c2f(_arr, shp)
+        return collect(arr)
+    end
 end
 

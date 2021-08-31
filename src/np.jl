@@ -8,6 +8,7 @@ function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
   mt = HierarchicalTable()
   mt["numpy.core.multiarray._reconstruct"] = np_multiarray_reconstruct
   mt["numpy.dtype"] = np_dtype
+  mt["numpy.core.multiarray.scalar"] = np_scalar
   mt["__build__.Pickle.NpyDtype"] = build_npydtype
   mt["__build__.NpyDtype"] = build_npydtype
   mt["__build__.Pickle.NpyArrayPlaceholder"] = build_nparray
@@ -169,3 +170,16 @@ function build_nparray(_, args)
     end
 end
 
+function np_scalar(dtype, data)
+    T = eltype(dtype)
+    if T isa NString
+        n = slen(T)
+        _data = reinterpret(UInt32, data)
+        _arr = dtype.little_endian ? Char.(Base.ltoh.(_data)) : Char.(Base.ntoh.(_data))
+        return String(_arr)
+    else
+        _data = reinterpret(T, data)
+        _arr = dtype.little_endian ? Base.ltoh.(_data) : Base.ntoh.(_data)
+        return _arr[]
+    end
+end

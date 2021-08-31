@@ -10,6 +10,8 @@ if VERSION < v"1.1"
     isnothing(::Any) = false
 end
 
+islittle_endian() = Base.ENDIAN_BOM == 0x04030201
+
 export load, store, loads, stores, AbstractPickle, Pickler
 
 include("./readarg.jl")
@@ -102,6 +104,9 @@ isbinary(pklr::Pickler) = protocol(pklr) >= 1
 
 include("./deserializer.jl")
 include("./serializer.jl")
+
+# numpy hack
+include("./np.jl")
 
 include("./torch/torch.jl")
 using .Torch

@@ -8,6 +8,7 @@ loads(p::AbstractPickle, s) = load(p, IOBuffer(s))
 
 load(file::AbstractString; proto=DEFAULT_PROTO) = open(f->load(f; proto=proto), file)
 load(io::IO; proto=DEFAULT_PROTO) = load(Pickler(proto), io)
+load(p::AbstractPickle, file::AbstractString) = open(f->load(p, f), file)
 function load(p::AbstractPickle, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)

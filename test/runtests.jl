@@ -23,6 +23,7 @@ builtin_type_samples = Dict(
 const tests = [
   "load",
   "store",
+  "np",
 ]
 
 Pickle.BATCHSIZE[] = 3

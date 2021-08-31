@@ -374,8 +374,7 @@ julia> Pickle.int_from_bytes(b"\x7f")
 """
 function int_from_bytes(x)
     isempty(x) && return 0
-    islittle = Base.ENDIAN_BOM == 0x04030201
-    islittle && (x = reverse(x))
+    islittle_endian() && (x = reverse(x))
     isneg = isone(first(x) >> 7)
     if !isneg
         s = Base.bytes2hex(x)

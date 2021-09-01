@@ -28,7 +28,7 @@ function np_multiarray_reconstruct(subtype, shape, dtype)
     @assert subtype.head == Symbol("numpy.ndarray")
     @assert isempty(subtype.args)
     @assert shape == (0,)
-    @assert dtype == b"b"
+    @assert dtype == b"b" || dtype == "b"
     return NpyArrayPlaceholder()
 end
 
@@ -162,6 +162,8 @@ end
 function build_nparray(_, args)
     ver, shp, dtype, is_column_maj, data = args
     T = eltype(dtype)
+
+    data = data isa String ? codeunits(data) : data # old numpy use string instead of bytes
 
     if T isa NString
         n = slen(T)

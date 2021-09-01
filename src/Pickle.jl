@@ -107,6 +107,7 @@ include("./serializer.jl")
 
 # numpy hack
 include("./np.jl")
+include("sparse.jl")
 
 include("./torch/torch.jl")
 using .Torch

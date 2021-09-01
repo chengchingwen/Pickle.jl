@@ -4,6 +4,7 @@ DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
 include("./pyscript.jl")
 include("./torch/thscript.jl")
+include("sparse.jl")
 
 builtin_type_samples = Dict(
   "str" => "Julia!",

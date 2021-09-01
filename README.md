@@ -25,7 +25,10 @@ An experimental package for loading and saving object in Python Pickle and Torch
 ```
 
 
-2.  framework for easily analyze and implement required translation methods. For those data which are
+2.  some basic support of loading `numpy.array` and `scipy.sparse.csr_matrix` with `Pickle.npyload("data.pkl")`.
+
+
+3.  framework for easily analyze and implement required translation methods. For those data which are
 not able to restore directly will be stored in a `Defer` object which is similar to `Expr` but is mutable.
 
 ```jl

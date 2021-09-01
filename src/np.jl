@@ -13,6 +13,9 @@ function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
   mt["__build__.NpyDtype"] = build_npydtype
   mt["__build__.Pickle.NpyArrayPlaceholder"] = build_nparray
   mt["__build__.NpyArrayPlaceholder"] = build_nparray
+  mt["scipy.sparse.csr.csr_matrix"] = sparse_matrix_reconstruct
+  mt["__build__.Pickle.SpMatrixPlaceholder"] = build_spmatrix
+  mt["__build__.SpMatrixPlaceholder"] = build_spmatrix
 
   return Pickler{proto}(Memo(memo), PickleStack(), mt)
 end
@@ -28,6 +31,10 @@ function np_multiarray_reconstruct(subtype, shape, dtype)
     @assert dtype == b"b"
     return NpyArrayPlaceholder()
 end
+
+struct SpMatrixPlaceholder end
+
+sparse_matrix_reconstruct() = SpMatrixPlaceholder()
 
 struct NpyDtype{T}
     little_endian::Bool
@@ -182,4 +189,10 @@ function np_scalar(dtype, data)
         _arr = dtype.little_endian ? Base.ltoh.(_data) : Base.ntoh.(_data)
         return _arr[]
     end
+end
+
+function build_spmatrix(_, args)
+    shape = args["_shape"]
+    nzval, colptr, rowval = csr_to_csc(shape..., args["data"], args["indptr"] .+ 1, args["indices"] .+ 1)
+    return SparseArrays.SparseMatrixCSC(shape..., colptr, rowval, nzval)
 end

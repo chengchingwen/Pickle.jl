@@ -1,4 +1,4 @@
-using Test, Serialization, Documenter, Pickle, PyCall
+using Test, Serialization, Documenter, Pickle, PyCall, SparseArrays
 
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
@@ -24,6 +24,7 @@ const tests = [
   "load",
   "store",
   "np",
+  "sparse",
 ]
 
 Pickle.BATCHSIZE[] = 3

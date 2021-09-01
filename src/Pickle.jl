@@ -4,6 +4,7 @@ import Serialization
 using Serialization: AbstractSerializer
 
 using DataStructures
+using SparseArrays
 
 if VERSION < v"1.1"
     isnothing(::Nothing) = true
@@ -107,6 +108,7 @@ include("./serializer.jl")
 
 # numpy hack
 include("./np.jl")
+include("sparse.jl")
 
 include("./torch/torch.jl")
 using .Torch

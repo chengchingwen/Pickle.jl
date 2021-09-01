@@ -36,6 +36,9 @@ def scheck_bts(f):
     s = io.read()
   return builtin_type_samples == pyloads(s)
 
+def to_nparray(x):
+  return x.toarray()
+
 # pre-built pickle files for testing `load`
 # for i in range(5):
 #   pickle.dump(x, open(f"./test_pkl/builtin_type_p{i}.pkl", "wb+"), protocol=i)
@@ -46,3 +49,4 @@ pystore = py"pystore"
 pystores = py"pystores"
 check_bts = py"check_bts"
 scheck_bts = py"scheck_bts"
+to_nparray = py"to_nparray"

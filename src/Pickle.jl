@@ -4,6 +4,7 @@ import Serialization
 using Serialization: AbstractSerializer
 
 using DataStructures
+using SparseArrays
 
 if VERSION < v"1.1"
     isnothing(::Nothing) = true

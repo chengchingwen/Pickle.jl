@@ -56,6 +56,3 @@ function csr_to_csc(nrow::Integer, ncol::Integer, nz::AbstractVector, rowptr::Ab
     end
     return new_nz, colptr, rowval
 end
-
-
-# SparseMatrixCSC(defer.args[2]["_shape"]..., defer.args[2]["indptr"] .+ 1, defer.args[2]["indices"] .+ 1, defer.args[2]["data"])

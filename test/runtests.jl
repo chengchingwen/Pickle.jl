@@ -1,10 +1,9 @@
-using Test, Serialization, Documenter, Pickle, PyCall
+using Test, Serialization, Documenter, Pickle, PyCall, SparseArrays
 
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
 include("./pyscript.jl")
 include("./torch/thscript.jl")
-include("sparse.jl")
 
 builtin_type_samples = Dict(
   "str" => "Julia!",
@@ -25,6 +24,7 @@ const tests = [
   "load",
   "store",
   "np",
+  "sparse",
 ]
 
 Pickle.BATCHSIZE[] = 3

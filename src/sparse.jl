@@ -1,5 +1,4 @@
 getptr(ptr::AbstractVector, i::Integer) = ptr[i]:(ptr[i+1]-1)
-nptr(ptr::AbstractVector, i::Integer) = length(getptr(ptr, i))
 
 """
     csr_to_csc(nrow, ncol, nz, rowptr, colval)

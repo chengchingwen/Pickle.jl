@@ -113,7 +113,11 @@ function np_dtype(obj, align, copy)
     @assert !align "structure dtype disallow"
     @assert copy
     m = match(r"^([<=>])?([?bBiufU])(\d*)$", obj)
-    @assert !isnothing(m) "unsupported dtype $obj: consider file an issue"
+    if isnothing(m)
+        @warn "unsupported dtype $obj: consider file an issue"
+        return Defer(Symbol("numpy.dtype"), obj, align, copy)
+    end
+
     ei, t, n = m.captures
     # '>': big, '<': little, '=': hardware-native
     islittle = ei == ">" ? false : ei == "<" ? true : islittle_endian()
@@ -161,6 +165,9 @@ end
 # TODO: support picklebuffer (Pickle v5)
 function build_nparray(_, args)
     ver, shp, dtype, is_column_maj, data = args
+    if dtype isa Defer
+        return Defer(Symbol("build.nparray"), args)
+    end
     T = eltype(dtype)
 
     data = data isa String ? codeunits(data) : data # old numpy use string instead of bytes

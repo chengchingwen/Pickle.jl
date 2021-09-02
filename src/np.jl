@@ -20,7 +20,7 @@ function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
   return Pickler{proto}(Memo(memo), PickleStack(), mt)
 end
 
-npyload(f::AbstractString) = load(NpyPickler(), f)
+npyload(f) = load(NpyPickler(), f)
 
 struct NpyArrayPlaceholder end
 

@@ -38,7 +38,6 @@ function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
 
   # ingore state_dict version number
   mt["__build__.OrderedCollections.OrderedDict"] = (od, _meta) -> od
-  mt["__build__.OrderedDict"] = (od, _meta...) -> od
 
   TorchPickler{proto}(Memo(memo), PickleStack(), mt, st)
 end

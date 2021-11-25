@@ -1,4 +1,4 @@
-libtorch = pyimport_conda("torch", "pytorch")
+libtorch = pyimport("torch")
 py"""
 import torch
 import random

@@ -225,12 +225,9 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.NEWOBJ_EX}, arg)
   push!(p.stack, res)
 end
 
-function objtypename(T)
-  namestr = string(Base.typename(typeof(T)))
-  if startswith(namestr, "typename(")
-    namestr = namestr[10:end-1]
-  end
-  return namestr
+function objtypename(t)
+  T = typeof(t)
+  join((fullname(parentmodule(T))..., Base.typename(T).name), '.')
 end
 
 function execute!(p::AbstractPickle, ::Val{OpCodes.BUILD}, arg)

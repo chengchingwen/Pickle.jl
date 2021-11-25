@@ -10,12 +10,9 @@ function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
   mt["numpy.dtype"] = np_dtype
   mt["numpy.core.multiarray.scalar"] = np_scalar
   mt["__build__.Pickle.NpyDtype"] = build_npydtype
-  mt["__build__.NpyDtype"] = build_npydtype
   mt["__build__.Pickle.NpyArrayPlaceholder"] = build_nparray
-  mt["__build__.NpyArrayPlaceholder"] = build_nparray
   mt["scipy.sparse.csr.csr_matrix"] = sparse_matrix_reconstruct
   mt["__build__.Pickle.SpMatrixPlaceholder"] = build_spmatrix
-  mt["__build__.SpMatrixPlaceholder"] = build_spmatrix
 
   return Pickler{proto}(Memo(memo), PickleStack(), mt)
 end

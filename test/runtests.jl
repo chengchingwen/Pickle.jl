@@ -3,7 +3,9 @@ using Test, Serialization, Documenter, Pickle, PyCall, SparseArrays
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
 include("./pyscript.jl")
-include("./torch/thscript.jl")
+if haskey(ENV, "TEST_TORCH")
+    include("./torch/thscript.jl")
+end
 
 builtin_type_samples = Dict(
   "str" => "Julia!",
@@ -46,7 +48,9 @@ const doctestfilters = [
     include(fp)
   end
 
-  @info "Test Pickle.Torch"
-  include("./torch/torch.jl")
+  if haskey(ENV, "TEST_TORCH")
+    @info "Test Pickle.Torch"
+    include("./torch/torch.jl")
+  end
 
 end

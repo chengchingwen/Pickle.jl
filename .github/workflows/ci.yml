@@ -19,24 +19,17 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.3' # Replace this with the minimum Julia version that your package supports.
-          - '1'   # automatically expands to the latest stable 1.x release of Julia
-        os:
-          - ubuntu-latest
+          - '1'
         arch:
           - x64
         julia-threads:
           - '1'
 
+        os:
+          - windows-latest
+          - macOS-latest
+
         include:
-          - os: windows-latest
-            version: '1'
-            arch: x64
-            julia-threads: '1'
-          - os: macOS-latest
-            version: '1'
-            arch: x64
-            julia-threads: '1'
           - os: ubuntu-latest
             version: '1'
             arch: x64
@@ -66,13 +59,20 @@ jobs:
           file: lcov.info
 
   test-torch:
-    name: TorchPickle
+    name: TorchPickle + Julia ${{ matrix.version }} - ubuntu-latest - ${{ github.event_name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1.3' # Replace this with the minimum Julia version that your package supports.
+          - '1'   # automatically expands to the latest stable 1.x release of Julia
+          - 'nightly'
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
-          version: '1'
+          version: ${{ matrix.version }}
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts

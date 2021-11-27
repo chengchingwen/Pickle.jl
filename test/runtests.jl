@@ -3,7 +3,9 @@ using Test, Serialization, Documenter, Pickle, PyCall, SparseArrays
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
 include("./pyscript.jl")
-include("./torch/thscript.jl")
+if haskey(ENV, "TEST_TORCH")
+    include("./torch/thscript.jl")
+end
 
 builtin_type_samples = Dict(
   "str" => "Julia!",
@@ -29,10 +31,16 @@ const tests = [
 
 Pickle.BATCHSIZE[] = 3
 
+const doctestfilters = [
+    r"{([a-zA-Z0-9]+,\s?)+[a-zA-Z0-9]+}",
+    r"(Array{[a-zA-Z0-9]+,\s?1}|Vector{[a-zA-Z0-9]+})",
+    r"(Array{[a-zA-Z0-9]+,\s?2}|Matrix{[a-zA-Z0-9]+})",
+]
+
 @testset "Pickle" begin
   @info "BATCHSIZE is set to: $(Pickle.BATCHSIZE[])"
   @info "Test doctest"
-  doctest(Pickle)
+  doctest(Pickle; doctestfilters=doctestfilters)
 
   for t in tests
     fp = joinpath(dirname(@__FILE__), "test_$t.jl")
@@ -40,7 +48,9 @@ Pickle.BATCHSIZE[] = 3
     include(fp)
   end
 
-  @info "Test Pickle.Torch"
-  include("./torch/torch.jl")
+  if haskey(ENV, "TEST_TORCH")
+    @info "Test Pickle.Torch"
+    include("./torch/torch.jl")
+  end
 
 end

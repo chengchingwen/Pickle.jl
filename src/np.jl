@@ -4,8 +4,7 @@ struct NpyPickler{PROTO} <: AbstractPickle
   mt::HierarchicalTable
 end
 
-function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
-  mt = HierarchicalTable()
+function np_methods!(mt)
   mt["numpy.core.multiarray._reconstruct"] = np_multiarray_reconstruct
   mt["numpy.dtype"] = np_dtype
   mt["numpy.core.multiarray.scalar"] = np_scalar
@@ -13,7 +12,12 @@ function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
   mt["__build__.Pickle.NpyArrayPlaceholder"] = build_nparray
   mt["scipy.sparse.csr.csr_matrix"] = sparse_matrix_reconstruct
   mt["__build__.Pickle.SpMatrixPlaceholder"] = build_spmatrix
+  return mt
+end
 
+function NpyPickler(proto=DEFAULT_PROTO, memo=Dict())
+  mt = HierarchicalTable()
+  np_methods!(mt)
   return Pickler{proto}(Memo(memo), PickleStack(), mt)
 end
 

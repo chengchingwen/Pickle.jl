@@ -1,4 +1,5 @@
 using ..Pickle: Memo, PickleStack, HierarchicalTable, load, isdefer
+using ..Pickle: np_methods!
 
 using DataStructures
 using Strided
@@ -16,11 +17,7 @@ struct TorchPickler{PROTO} <: AbstractPickle
   storage::StorageManager
 end
 
-function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
-  st = StorageManager()
-  mt = HierarchicalTable()
-
-  # some corresponding methods
+function torch_methods!(st, mt)
   mt["collections.OrderedDict"] = OrderedDict
   mt["torch._utils._rebuild_tensor_v2"] = (arg...) -> build_tensor(st, arg...)
 
@@ -38,6 +35,16 @@ function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
 
   # ingore state_dict version number
   mt["__build__.OrderedCollections.OrderedDict"] = (od, _meta) -> od
+  return mt
+end
+
+function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
+  st = StorageManager()
+  mt = HierarchicalTable()
+
+  # some corresponding methods
+  np_methods!(mt)
+  torch_methods!(st, mt)
 
   TorchPickler{proto}(Memo(memo), PickleStack(), mt, st)
 end
@@ -48,8 +55,8 @@ isbinary(pklr::TorchPickler) = protocol(pklr) >= 1
 """
   THload(file::AbstractString)
 
-load data that saved by `torch.save`. `torch.tensor` 
-will be load as `Array` or `Strided.StridedView` 
+load data that saved by `torch.save`. `torch.tensor`
+will be load as `Array` or `Strided.StridedView`
 dependent on the memory layout of that tensor.
 """
 THload(file::AbstractString) = open(file) do io
@@ -58,7 +65,7 @@ end
 
 function THload(tp::TorchPickler, io)
   if peek(io) == 0x80
-    return legacy_load(tp, io)
+    return unchecked_legacy_load(tp, io)
   elseif read(io, 4) == b"PK\x03\x04"
     z = ZipFile.Reader(io)
     if any(x->x.name=="constants.pkl", z.files)

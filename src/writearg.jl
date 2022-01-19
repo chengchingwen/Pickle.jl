@@ -40,12 +40,15 @@ function write_plain_str(io::IO, arg)
         len += write(io, c)
       end
     else
-      if codepoint(c) >> 16 |> !iszero # large unicode
+      cp = codepoint(c)
+      if cp >> 16 |> !iszero # large unicode
         len += write(io, "\\U")
         len += write(io, lpad(string(codepoint(c); base=16), 8, '0'))
-      else
+      elseif cp >> 8 |> !iszero
         len += write(io, "\\u")
         len += write(io, lpad(string(codepoint(c); base=16), 4, '0'))
+      else # latin1
+        len += write(io, UInt8(cp))
       end
     end
   end

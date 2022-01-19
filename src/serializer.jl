@@ -353,6 +353,15 @@ function save(p::AbstractPickle, io::IO, x::Set)
   end
 end
 
+function _decode(x)
+    b = IOBuffer(x)
+    try
+        return String(read(StringDecoder(b, Encoding("latin1"), encoding(String))))
+    finally
+        close(b)
+    end
+end
+
 function save(p::AbstractPickle, io::IO, x::Base.CodeUnits)
   n = length(x)
   if protocol(p) < 3
@@ -362,7 +371,7 @@ function save(p::AbstractPickle, io::IO, x::Base.CodeUnits)
       write(io, OpCodes.REDUCE)
     else
       save_global(p, io, objtypename(x))
-      save_object(p, io, (x.s, i"latin1"))
+      save_object(p, io, (_decode(x), i"latin1"))
       write(io, OpCodes.REDUCE)
     end
   else

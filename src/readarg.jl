@@ -72,8 +72,8 @@ read a string with quotes end with "\n" (newline) from `io`.
 
 # Examples
 ```jldoctest
-julia> Pickle.read_stringnl(IOBuffer(b"'abcd'\nefg\n"))
-"abcd"
+julia> Pickle.read_stringnl(IOBuffer(b"'abcdé'\nefg\n"))
+"abcdé"
 
 julia> Pickle.read_stringnl(IOBuffer(b"\n"))
 ERROR: no string quotes around
@@ -105,12 +105,12 @@ function read_stringnl(io::IO; decode=true, stripquotes=true)
         start = first(data)
         !isquote(start) && error("no string quotes around $data")
 
-        endl = data[nl_idx-1]
+        endl = data[prevind(data, nl_idx)]
         !isequal(start, endl) && error("string quote $start not found at both end of $data")
 
-        data = data[2:nl_idx-2]
+        data = data[2:prevind(data, nl_idx-1)]
     else
-        data = data[1:nl_idx-1]
+        data = data[1:prevind(data, nl_idx)]
     end
 
     if decode
@@ -245,12 +245,14 @@ read_bytearray8(io::IO) = read_multiple(io, "bytearray8", read_uint8)
 @doc raw"""
 # Examples
 ```jldoctest
-julia> Pickle.read_unicodestringnl(IOBuffer(b"abc\\uabcd\njunk")) == "abc\uabcd"
+julia> Pickle.read_unicodestringnl(IOBuffer(b"abc\\uabcd\xe9\njunk")) == "abc\uabcdé"
 true
 ```
 """
 function read_unicodestringnl(io::IO)
-    data = readline(io; keep=true)
+    # handling raw-unicode-escape (latin1 with \u, \U)
+    data = readuntil(io, 0x0a; keep=true)::Vector{UInt8}
+    data = decode(data, "latin1")
     data[end] != '\n' && error("no newline found when trying to read unicodestringnl")
 
     if endswith(data, "\r\n") # handle windows newline
@@ -259,7 +261,7 @@ function read_unicodestringnl(io::IO)
         nl_idx = lastindex(data)
     end
 
-    data = data[1:nl_idx-1]
+    data = data[1:prevind(data, nl_idx)]
     return unescape_string(data)
 end
 

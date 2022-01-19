@@ -21,7 +21,7 @@ p7
 c_codecs
 encode
 p8
-(V1234
+(V1234Â²
 p9
 Vlatin1
 p10
@@ -63,4 +63,8 @@ VFebruary
 p27
 aL14L
 aL2012L
-as.
+asVunicode
+p28
+VRésumé
+p29
+s.

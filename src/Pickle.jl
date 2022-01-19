@@ -3,6 +3,8 @@ module Pickle
 import Serialization
 using Serialization: AbstractSerializer
 
+using StringEncodings
+
 using DataStructures
 using SparseArrays
 

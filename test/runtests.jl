@@ -15,11 +15,12 @@ builtin_type_samples = Dict(
     false => true,
   ),
   "float" => 3.1415926,
-  "bytes" => b"1234",
+  "bytes" => b"1234²",
   "tuple" => (1, 2.0, "3", b"4"),
   "set" => Set((1,2,3,12,21)),
   "bigint" => 1234567890987654321012345678909876543210,
   "list" => ["February", 14, 2012],
+  "unicode" => "Résumé",
 )
 
 const tests = [

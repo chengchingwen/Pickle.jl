@@ -2,6 +2,7 @@
 
   mktempdir() do path
     for i in 0:4
+      @info "protocal $i"
       # test directly save
       file = joinpath(path, "builtin_type_p$i.jpkl")
       store(file, builtin_type_samples; proto=i)

@@ -1,4 +1,9 @@
-using Test, Serialization, Documenter, Pickle, PyCall, SparseArrays
+using CondaPkg
+# copy CondaPkg.toml to temporal pkg environment
+testproj_dir = dirname(Base.load_path()[1])
+cp(joinpath(@__DIR__, "CondaPkg.toml"), joinpath(testproj_dir, "CondaPkg.toml"))
+
+using Test, Serialization, Documenter, Pickle, PythonCall, SparseArrays
 
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
@@ -37,6 +42,8 @@ const doctestfilters = [
     r"(Array{[a-zA-Z0-9]+,\s?1}|Vector{[a-zA-Z0-9]+})",
     r"(Array{[a-zA-Z0-9]+,\s?2}|Matrix{[a-zA-Z0-9]+})",
 ]
+
+@show CondaPkg.STATE
 
 @testset "Pickle" begin
   @info "BATCHSIZE is set to: $(Pickle.BATCHSIZE[])"

@@ -9,7 +9,7 @@ const THTensorElType = Union{Float64, Float32, Float16, UInt8,
 """
   THsave(file::AbstractString, x)
 
-save data that can be load by `torch.load`. `Array` and 
+save data that can be load by `torch.load`. `Array` and
 `Strided.StridedView` will be treated as `torch.tensor`.
 """
 THsave(file::AbstractString, x) = open(file, "w+") do io
@@ -33,8 +33,6 @@ function THsave(tp::TorchPickler, io, x)
   store(io, collect(keys(tp.storage.data)); proto=protocol(tp))
   write_storage(io, tp.storage)
 end
-
-Strided.StridedView(x::PermutedDimsArray{T,N,perm}) where {T,N,perm} = permutedims(StridedView(x.parent), perm)
 
 save(p::TorchPickler, io::IO, a::A) where {T <: THTensorElType, A <: AbstractArray{T}} = save(p, io, StridedView(a))
 function save(p::TorchPickler, io::IO, x::S) where {T <: THTensorElType, S <: StridedView{T}}

@@ -51,7 +51,8 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
-      - run: julia --project -e 'using Pkg; Pkg.test(; coverage=true)';
+      - run: python --version
+      - run: LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.julia/conda/3/lib julia --project -e 'using Pkg; Pkg.test(; coverage=true)';
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v1
         with:

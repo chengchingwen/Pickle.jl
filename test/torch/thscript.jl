@@ -70,4 +70,3 @@ const _pyslice = pyeval("pyslice", @__MODULE__)
 random_slice(args...) = pycall(_random_slice, args...)
 random_stride(args...) = pycall(_random_stride, args...)
 pyslice(args...) = pycall(_pyslice, args...)
-

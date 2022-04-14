@@ -4,7 +4,7 @@ using Strided
 const torch_tests = [
   "load",
   "load_zip",
-  "save",
+  # "save",
   "prebuild"
 ]
 

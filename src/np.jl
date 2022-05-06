@@ -98,6 +98,8 @@ function npy_typechar_to_jltype(t, n)
         else
             error("unsupport length $n for $t")
         end
+    elseif t == "O"
+        return Any
     else
         error("unsupport type $t")
     end
@@ -113,7 +115,7 @@ function np_dtype(obj, align, copy)
     align, copy = Bool(align), Bool(copy)
     @assert !align "structure dtype disallow"
     @assert copy
-    m = match(r"^([<=>])?([?bBiufU])(\d*)$", obj)
+    m = match(r"^([<=>])?([?bBiufUO])(\d*)$", obj)
     if isnothing(m)
         @warn "unsupported dtype $obj: consider file an issue"
         return Defer(Symbol("numpy.dtype"), obj, align, copy)
@@ -144,6 +146,11 @@ function build_npydtype(npydtype, state)
         @assert elsize == 4n
         @assert alignment == 4
         @assert flags == 8
+    elseif T isa Type{Any}
+        @assert elsize == -1
+        @assert alignment == -1
+        # https://github.com/numpy/numpy/blob/4c60b3263ac50e5e72f6a909e156314fc3c9cba0/numpy/core/include/numpy/ndarraytypes.h#L583
+        @assert flags == 63
     else
         @assert elsize == -1
         @assert alignment == -1

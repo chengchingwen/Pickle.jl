@@ -16,7 +16,7 @@
       @info "protocal $i"
       # test loading from directly saved file
       file = joinpath(path, "pybuiltin_type_p$i.pkl")
-      pyeval("pystore(\"$file\", builtin_type_samples, $i)", @__MODULE__)
+      pyeval("pystore(r\"$file\", builtin_type_samples, $i)", @__MODULE__)
       @test builtin_type_samples == load(file)
     end
   end

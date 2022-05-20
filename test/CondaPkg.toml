@@ -1,7 +1,4 @@
-channels = ["anaconda", "conda-forge"]
-
-[deps]
-pytorch = ""
-nomkl = ""
+[pip.deps]
 numpy = ""
+torch = ""
 scipy = ""

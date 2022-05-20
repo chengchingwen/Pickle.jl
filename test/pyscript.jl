@@ -1,4 +1,4 @@
-py"""
+pyexec(raw"""
 import pickle
 builtin_type_samples = {
   'str': 'Julia!',
@@ -48,11 +48,19 @@ def to_nparray(x):
 # for i in range(5):
 #   with open(f"./test_pkl/builtin_type_p{i}.pkl", "wb+") as f:
 #     pickle.dump(builtin_type_samples, f, protocol=i)
-"""
-pyload = py"pyload"
-pyloads = py"pyloads"
-pystore = py"pystore"
-pystores = py"pystores"
-check_bts = py"check_bts"
-scheck_bts = py"scheck_bts"
-to_nparray = py"to_nparray"
+""", @__MODULE__)
+const _pyload = pyeval("pyload", @__MODULE__)
+const _pyloads = pyeval("pyloads", @__MODULE__)
+const _pystore = pyeval("pystore", @__MODULE__)
+const _pystores = pyeval("pystores", @__MODULE__)
+const _check_bts = pyeval("check_bts", @__MODULE__)
+const _scheck_bts = pyeval("scheck_bts", @__MODULE__)
+const _to_nparray = pyeval("to_nparray", @__MODULE__)
+
+pyload(args...) = pyconvert(Any, pycall(_pyload, args...))
+pyloads(args...) = pyconvert(Any, pycall(_pyloads, args...))
+pystore(args...) = pyconvert(Any, pycall(_pystore, args...))
+pystores(args...) = pyconvert(Any, pycall(_pystores, args...))
+check_bts(args...) = pyconvert(Any, pycall(_check_bts, args...))
+scheck_bts(args...) = pyconvert(Any, pycall(_scheck_bts, args...))
+to_nparray(args...) = pyconvert(Any, pycall(_to_nparray, args...))

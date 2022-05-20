@@ -1,11 +1,18 @@
-using Test, Serialization, Documenter, Pickle, PyCall, SparseArrays
+using CondaPkg
+# copy CondaPkg.toml to temporal pkg environment
+testproj_dir = dirname(Base.load_path()[1])
+@static if Sys.islinux()
+    cp(joinpath(@__DIR__, "CondaPkg.toml"), joinpath(testproj_dir, "CondaPkg.toml"))
+else
+    cp(joinpath(@__DIR__, "CondaPkg_nonlinux.toml"), joinpath(testproj_dir, "CondaPkg.toml"))
+end
+
+using Test, Serialization, Documenter, Pickle, PythonCall, SparseArrays
 
 DocMeta.setdocmeta!(Pickle, :DocTestSetup, :(using Pickle); recursive=true)
 
 include("./pyscript.jl")
-if haskey(ENV, "TEST_TORCH")
-    include("./torch/thscript.jl")
-end
+include("./torch/thscript.jl")
 
 builtin_type_samples = Dict(
   "str" => "Julia!",
@@ -49,9 +56,7 @@ const doctestfilters = [
     include(fp)
   end
 
-  if haskey(ENV, "TEST_TORCH")
-    @info "Test Pickle.Torch"
-    include("./torch/torch.jl")
-  end
+  @info "Test Pickle.Torch"
+  include("./torch/torch.jl")
 
 end

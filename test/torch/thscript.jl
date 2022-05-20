@@ -1,5 +1,5 @@
-libtorch = pyimport_conda("torch", "pytorch")
-py"""
+const libtorch = pyimport("torch")
+pyexec(raw"""
 import torch
 import random
 
@@ -59,9 +59,14 @@ def random_stride(x):
 def pyslice(x, i):
   return x[i:]
 
-"""
-thload = libtorch.load
-thsave = libtorch.save
-random_slice = py"random_slice"
-random_stride = py"random_stride"
-pyslice = py"pyslice"
+""", @__MODULE__)
+thload(args...) = pyconvert(Any, pycall(libtorch.load, args...))
+thsave(args...) = pyconvert(Any, pycall(libtorch.save, args...))
+
+const _random_slice = pyeval("random_slice", @__MODULE__)
+const _random_stride = pyeval("random_stride", @__MODULE__)
+const _pyslice = pyeval("pyslice", @__MODULE__)
+
+random_slice(args...) = pycall(_random_slice, args...)
+random_stride(args...) = pycall(_random_stride, args...)
+pyslice(args...) = pycall(_pyslice, args...)

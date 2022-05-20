@@ -7,7 +7,7 @@
     @test builtin_type_samples == bts
 
     # test loading from string
-    sbts = loads(py"pystores(builtin_type_samples, $i)")
+    sbts = loads(pyconvert(Vector, pyeval("pystores(builtin_type_samples, $i)", @__MODULE__)))
     @test builtin_type_samples == sbts
   end
 
@@ -16,7 +16,7 @@
       @info "protocal $i"
       # test loading from directly saved file
       file = joinpath(path, "pybuiltin_type_p$i.pkl")
-      py"pystore($file, builtin_type_samples, $i)"
+      pyeval("pystore(r\"$file\", builtin_type_samples, $i)", @__MODULE__)
       @test builtin_type_samples == load(file)
     end
   end

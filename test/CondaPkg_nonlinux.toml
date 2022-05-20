@@ -1,0 +1,4 @@
+[pip.deps]
+numpy = ""
+torch = ""
+scipy = ""

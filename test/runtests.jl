@@ -43,8 +43,6 @@ const doctestfilters = [
     r"(Array{[a-zA-Z0-9]+,\s?2}|Matrix{[a-zA-Z0-9]+})",
 ]
 
-@show CondaPkg.STATE
-
 @testset "Pickle" begin
   @info "BATCHSIZE is set to: $(Pickle.BATCHSIZE[])"
   @info "Test doctest"

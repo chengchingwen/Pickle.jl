@@ -52,15 +52,12 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - run: python --version
-      - run: ls $CONDA
       - name: windows
         if: runner.os == 'Windows'
         run: JULIA_CONDAPKG_EXE="${CONDA}\_conda.exe" julia --project -e 'using Pkg; Pkg.test(; coverage=true)'
       - name: non-windows
         if: runner.os != 'Windows'
         run: JULIA_CONDAPKG_EXE=$CONDA/bin/conda julia --project -e 'using Pkg; Pkg.test(; coverage=true)'
-      # - run: echo $JULIA_CONDAPKG_EXE
-      # - run: julia --project -e 'using Pkg; Pkg.test(; coverage=true)'
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v1
         with:

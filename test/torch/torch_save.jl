@@ -22,7 +22,7 @@
     @testset "slice" begin
       file = joinpath(path, "slice.bin")
       x_slice = @strided x[2:5, 3:8]
-      Torch.THsave(file, [x, x_slice])
+      Torch.THsave(file, Any[x, x_slice])
       test_save_slice = libtorch.load(file)
       save_x, save_slice = test_save_slice
       @test save_x.numpy() ≈ x
@@ -32,7 +32,7 @@
     @testset "stride" begin
       file = joinpath(path, "stride.bin")
       x_stride = @strided x[2:3:9, 1:2:8]
-      Torch.THsave(file, [x, x_stride])
+      Torch.THsave(file, Any[x, x_stride])
       test_save_stride = libtorch.load(file)
       save_x, save_stride = test_save_stride
       @test save_x.numpy() ≈ x
@@ -42,7 +42,7 @@
     @testset "reshape" begin
       file = joinpath(path, "reshape.bin")
       x_reshape = @strided reshape(x, (2,5,5,2))
-      Torch.THsave(file, [x, x_reshape])
+      Torch.THsave(file, Any[x, x_reshape])
       test_save_reshape = libtorch.load(file)
       save_x, save_reshape = test_save_reshape
       @test save_x.numpy() ≈ x
@@ -52,7 +52,7 @@
     @testset "offset" begin
       file = joinpath(path, "offset.bin")
       x_offset = @strided reshape(reshape(x, 100)[6:end], (5, 19))
-      Torch.THsave(file, [x, x_offset])
+      Torch.THsave(file, Any[x, x_offset])
       test_save_offset = libtorch.load(file)
       save_x, save_offset = test_save_offset
       @test save_x.numpy() ≈ x
@@ -63,7 +63,7 @@
       file = joinpath(path, "mutation.bin")
       x1 = copy(x)
       x2 = @strided x1[6:end, :]
-      Torch.THsave(file, [x1, x2])
+      Torch.THsave(file, Any[x1, x2])
       test_save_mutate = libtorch.load(file)
       save_x1, save_x2 = test_save_mutate
       set!(save_x2, 0, 0)
@@ -76,7 +76,7 @@
     @testset "transpose" begin
       file = joinpath(path, "transpose.bin")
       x_transpose = @strided permutedims(x, (2,1))
-      Torch.THsave(file, [x, x_transpose])
+      Torch.THsave(file, Any[x, x_transpose])
       test_save_transpose = libtorch.load(file)
       save_x, save_transpose = test_save_transpose
       @test save_x.numpy() ≈ x

@@ -1,7 +1,7 @@
 name = "Pickle"
 uuid = "fbb45041-c46e-462f-888f-7c521cafbc2c"
 authors = ["chengchingwen <adgjl5645@hotmail.com>"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"

@@ -1,4 +1,4 @@
-[deps]
+[pip.deps]
 numpy = ""
-pytorch = ""
+torch = ""
 scipy = ""

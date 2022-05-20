@@ -1,7 +1,11 @@
 using CondaPkg
 # copy CondaPkg.toml to temporal pkg environment
 testproj_dir = dirname(Base.load_path()[1])
-cp(joinpath(@__DIR__, "CondaPkg.toml"), joinpath(testproj_dir, "CondaPkg.toml"))
+@static if Sys.islinux()
+    cp(joinpath(@__DIR__, "CondaPkg.toml"), joinpath(testproj_dir, "CondaPkg.toml"))
+else
+    cp(joinpath(@__DIR__, "CondaPkg_nonlinux.toml"), joinpath(testproj_dir, "CondaPkg.toml"))
+end
 
 using Test, Serialization, Documenter, Pickle, PythonCall, SparseArrays
 

@@ -1,4 +1,5 @@
 [deps]
+pytorch = "<1.11"
 numpy = ""
-pytorch = ""
 scipy = ""
+python = ""

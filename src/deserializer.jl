@@ -175,7 +175,11 @@ function execute!(p::AbstractPickle, ::Val{OpCodes.REDUCE}, arg)
   updatefirst!(p.stack, res)
 end
 
-execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg "imcompatible protocol version: require version >= $arg"
+execute!(p::AbstractPickle, ::Val{OpCodes.PROTO}, arg) = @assert protocol(p) >= arg """Imcompatible protocol version:
+    Trying to load version $arg pickle file with version $(protocol(p)) pickler.
+    Try setting the `proto` keyword argument when loading, e.g. `load(file; proto = $arg)`.
+    If that still failed, please open an issue.
+"""
 
 # FRAMEING is ignored, but can be added if we found performance is bounded by io
 for op in :(STOP, FRAME).args
@@ -252,7 +256,7 @@ end
 # execute!(p::AbstractPickle, ::Val{OpCodes.NEXT_BUFFER}, arg) = nothing
 # execute!(p::AbstractPickle, ::Val{OpCodes.READONLY_BUFFER}, arg) = nothing
 
-# Extension not supported, fire an issue if you need it.
+# Extension not supported, file an issue if you need it.
 # execute!(p::AbstractPickle, ::Val{OpCodes.EXT1}, arg) = read_uint1
 # execute!(p::AbstractPickle, ::Val{OpCodes.EXT2}, arg) = read_uint2
 # execute!(p::AbstractPickle, ::Val{OpCodes.EXT4}, arg) = read_int4

@@ -1,10 +1,11 @@
+using BFloat16s
 using InternedStrings
 using Strided
 using ..Pickle: store, save_global, save_get, save_object, memoize, OpCodes, hasref
 import ..Pickle: save
 
 const THTensorElType = Union{Float64, Float32, Float16, UInt8,
-                             Int8, Int16, Int32, Int16, Bool}
+                             Int8, Int16, Int32, Int16, Bool, BFloat16}
 
 """
   THsave(file::AbstractString, x)

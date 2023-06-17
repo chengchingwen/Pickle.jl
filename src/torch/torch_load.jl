@@ -32,6 +32,7 @@ function torch_methods!(st, mt)
   mt["__julia__.__torch__.StorageType.Int32"] = "torch.IntStorage"
   mt["__julia__.__torch__.StorageType.Int64"] = "torch.LongStorage"
   mt["__julia__.__torch__.StorageType.Bool"] = "torch.BoolStorage"
+  mt["__julia__.__torch__.StorageType.BFloat16"] = "torch.BFloat16Storage"
 
   # ingore state_dict version number
   mt["__build__.OrderedCollections.OrderedDict"] = (od, _meta) -> od

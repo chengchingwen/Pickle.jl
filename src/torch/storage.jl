@@ -1,3 +1,4 @@
+using BFloat16s
 import Base: setindex!, getindex, haskey, pairs, keys, values
 
 @enum DType begin
@@ -10,6 +11,7 @@ import Base: setindex!, getindex, haskey, pairs, keys, values
   INT
   LONG
   BOOL
+  BFLOAT16
 end
 
 jltype2dtype(::Type{Float32}) = FLOAT
@@ -21,6 +23,7 @@ jltype2dtype(::Type{Int16}) = SHORT
 jltype2dtype(::Type{Int32}) = INT
 jltype2dtype(::Type{Int64}) = LONG
 jltype2dtype(::Type{Bool}) = BOOL
+jltype2dtype(::Type{BFloat16}) = BFLOAT16
 
 function dtype2jltype(t::DType)
   if t == FLOAT
@@ -41,6 +44,8 @@ function dtype2jltype(t::DType)
     return Int64
   elseif t == BOOL
     return Bool
+  elseif t == BFLOAT16
+    return BFloat16
   end
 end
 
@@ -63,6 +68,8 @@ function bytewidth(t::DType)
     return 8
   elseif t == BOOL
     return 1
+  elseif t == BFLOAT16
+    return 2
   end
 end
 
@@ -86,6 +93,8 @@ function thtype2dtype(defer)
     return LONG
   elseif type == Symbol("torch.BoolStorage")
     return BOOL
+  elseif type == Symbol("torch.BFloat16Storage")
+    return BFLOAT16
   else
     error("unknown type: $type")
   end

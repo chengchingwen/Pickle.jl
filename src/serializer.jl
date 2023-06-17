@@ -14,13 +14,13 @@ stores(p, x) = sprint((io, x)->store(p, io, x), x)
 store(file::AbstractString, x; proto=DEFAULT_PROTO) = open(f->store(f, x; proto=proto), file, "w+")
 store(io::IO, x; proto=DEFAULT_PROTO) = store(Pickler(proto), io, x)
 function store(p::AbstractPickle, io::IO, @nospecialize(x))
-  protocol(p) >= 2 && write_porotcol(p, io)
+  protocol(p) >= 2 && write_protocol(p, io)
   save_object(p, io, x)
   write(io, OpCodes.STOP)
   return
 end
 
-write_porotcol(p::AbstractPickle, io::IO) = write(io, OpCodes.PROTO) + write_uint1(io, protocol(p))
+write_protocol(p::AbstractPickle, io::IO) = write(io, OpCodes.PROTO) + write_uint1(io, protocol(p))
 
 save_object(p::AbstractPickle, io::IO, x) = hasref(p.memo, x) ? save_get(p, io, x) : save(p, io, x)
 

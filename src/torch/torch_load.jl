@@ -2,7 +2,7 @@ using ..Pickle: Memo, PickleStack, HierarchicalTable, load, isdefer
 using ..Pickle: np_methods!
 
 using DataStructures
-using Strided
+using StridedViews
 using ZipFile
 
 const DEFAULT_PROTO = 2
@@ -57,7 +57,7 @@ isbinary(pklr::TorchPickler) = protocol(pklr) >= 1
   THload(file::AbstractString)
 
 load data that saved by `torch.save`. `torch.tensor`
-will be load as `Array` or `Strided.StridedView`
+will be load as `Array` or `StridedView`
 dependent on the memory layout of that tensor.
 """
 THload(file::AbstractString) = open(file) do io

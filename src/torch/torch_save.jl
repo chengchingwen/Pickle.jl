@@ -1,6 +1,6 @@
 using BFloat16s
 using InternedStrings
-using Strided
+using StridedViews
 using ..Pickle: store, save_global, save_get, save_object, memoize, OpCodes, hasref
 import ..Pickle: save
 
@@ -11,7 +11,7 @@ const THTensorElType = Union{Float64, Float32, Float16, UInt8,
   THsave(file::AbstractString, x)
 
 save data that can be load by `torch.load`. `Array` and
-`Strided.StridedView` will be treated as `torch.tensor`.
+`StridedView` will be treated as `torch.tensor`.
 """
 THsave(file::AbstractString, x) = open(file, "w+") do io
   THsave(TorchPickler(), io, x)

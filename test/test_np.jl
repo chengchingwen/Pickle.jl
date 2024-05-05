@@ -13,9 +13,9 @@
         jlscalars = Pickle.npyload("./test_pkl/test-np-scalar.pkl")
         # [np.uint32(4), np.int64(6), np.float16(3), np.float64(5), np.unicode_("abcα😀")]
         npscalars = pyload("./test_pkl/test-np-scalar.pkl")
-        @test jlscalars[1] == tryparse(UInt32, pyconvert(Any, npscalars[1].__repr__()))
-        @test jlscalars[2] == tryparse(Int64, pyconvert(Any, npscalars[2].__repr__()))
-        @test jlscalars[3] == tryparse(Float16, pyconvert(Any, npscalars[3].__repr__()))
+        @test jlscalars[1] == pyconvert(Any, npscalars[1])
+        @test jlscalars[2] == pyconvert(Any, npscalars[2])
+        @test jlscalars[3] == pyconvert(Any, npscalars[3])
         @test jlscalars[4] == pyconvert(Float64, npscalars[4])
         @test jlscalars[5] == pyconvert(String, npscalars[5])
 

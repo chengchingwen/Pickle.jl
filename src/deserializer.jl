@@ -6,9 +6,12 @@ Serialization.deserialize(p::AbstractPickle, io::IO) = load(p, io)
 loads(s; proto=DEFAULT_PROTO) = loads(Pickler(proto), s)
 loads(p::AbstractPickle, s) = load(p, IOBuffer(s))
 
-load(file::AbstractString; proto=DEFAULT_PROTO) = open(f->load(f; proto=proto), file)
-load(io::IO; proto=DEFAULT_PROTO) = load(Pickler(proto), io)
-load(p::AbstractPickle, file::AbstractString) = open(f->load(p, f), file)
+load(file::AbstractString; proto = DEFAULT_PROTO, mmap = false) = load(Pickler(proto), file; mmap)
+load(io::IO; proto = DEFAULT_PROTO) = load(Pickler(proto), io)
+load(p::AbstractPickle, file::AbstractString; mmap = false) = open(file) do f
+    io = mmap ? IOBuffer(Mmap.mmap(f, Vector{UInt8})) : f
+    return load(p, io)
+end
 function load(p::AbstractPickle, io::IO)
   while !eof(io)
     opcode = read(io, OpCode)

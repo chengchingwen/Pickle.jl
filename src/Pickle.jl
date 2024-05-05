@@ -1,5 +1,6 @@
 module Pickle
 
+using Mmap
 import Serialization
 using Serialization: AbstractSerializer
 
@@ -7,11 +8,6 @@ using StringEncodings
 
 using DataStructures
 using SparseArrays
-
-if VERSION < v"1.1"
-    isnothing(::Nothing) = true
-    isnothing(::Any) = false
-end
 
 islittle_endian() = Base.ENDIAN_BOM == 0x04030201
 
@@ -35,7 +31,7 @@ function PickleStack()
   meta = Stack{Stack{Any}}()
   s = PickleStack(meta)
   mark!(s)
-	return s
+  return s
 end
 
 getstack(s::PickleStack) = first(s.meta)

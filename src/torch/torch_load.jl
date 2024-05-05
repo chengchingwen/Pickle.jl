@@ -1,6 +1,7 @@
 using ..Pickle: Memo, PickleStack, HierarchicalTable, load, isdefer
 using ..Pickle: np_methods!
 
+using Mmap
 using DataStructures
 using StridedViews
 using ZipFile
@@ -54,14 +55,15 @@ protocol(::TorchPickler{P}) where {P} = P
 isbinary(pklr::TorchPickler) = protocol(pklr) >= 1
 
 """
-  THload(file::AbstractString)
+  THload(file::AbstractString; mmap = false)
 
 load data that saved by `torch.save`. `torch.tensor`
 will be load as `Array` or `StridedView`
 dependent on the memory layout of that tensor.
 """
-THload(file::AbstractString) = open(file) do io
-  THload(TorchPickler(), io)
+THload(file::AbstractString; mmap = false) = open(file) do f
+    io = mmap ? IOBuffer(Mmap.mmap(f, Vector{UInt8})) : f
+    return THload(TorchPickler(), io)
 end
 
 function THload(tp::TorchPickler, io)

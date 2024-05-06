@@ -19,25 +19,25 @@ struct TorchPickler{PROTO} <: AbstractPickle
 end
 
 function torch_methods!(st, mt)
-  mt["collections.OrderedDict"] = OrderedDict
-  mt["torch._utils._rebuild_tensor_v2"] = (arg...) -> build_tensor(st, arg...)
+    mt["collections.OrderedDict"] = OrderedDict
+    mt["torch._utils._rebuild_tensor_v2"] = (arg...) -> build_tensor(st, false, arg...)
 
-  mt["__julia__.__torch__.rebuild_tensor"] = "torch._utils._rebuild_tensor_v2"
-  mt["__julia__.OrderedDict"] = "collections.OrderedDict"
-  mt["__julia__.__torch__.StorageType.Float32"] = "torch.FloatStorage"
-  mt["__julia__.__torch__.StorageType.Float64"] = "torch.DoubleStorage"
-  mt["__julia__.__torch__.StorageType.Float16"] = "torch.HalfStorage"
-  mt["__julia__.__torch__.StorageType.UInt8"] = "torch.ByteStorage"
-  mt["__julia__.__torch__.StorageType.Int8"] = "torch.CharStorage"
-  mt["__julia__.__torch__.StorageType.Int16"] = "torch.ShortStorage"
-  mt["__julia__.__torch__.StorageType.Int32"] = "torch.IntStorage"
-  mt["__julia__.__torch__.StorageType.Int64"] = "torch.LongStorage"
-  mt["__julia__.__torch__.StorageType.Bool"] = "torch.BoolStorage"
-  mt["__julia__.__torch__.StorageType.BFloat16"] = "torch.BFloat16Storage"
+    mt["__julia__.__torch__.rebuild_tensor"] = "torch._utils._rebuild_tensor_v2"
+    mt["__julia__.OrderedDict"] = "collections.OrderedDict"
+    mt["__julia__.__torch__.StorageType.Float32"] = "torch.FloatStorage"
+    mt["__julia__.__torch__.StorageType.Float64"] = "torch.DoubleStorage"
+    mt["__julia__.__torch__.StorageType.Float16"] = "torch.HalfStorage"
+    mt["__julia__.__torch__.StorageType.UInt8"] = "torch.ByteStorage"
+    mt["__julia__.__torch__.StorageType.Int8"] = "torch.CharStorage"
+    mt["__julia__.__torch__.StorageType.Int16"] = "torch.ShortStorage"
+    mt["__julia__.__torch__.StorageType.Int32"] = "torch.IntStorage"
+    mt["__julia__.__torch__.StorageType.Int64"] = "torch.LongStorage"
+    mt["__julia__.__torch__.StorageType.Bool"] = "torch.BoolStorage"
+    mt["__julia__.__torch__.StorageType.BFloat16"] = "torch.BFloat16Storage"
 
-  # ingore state_dict version number
-  mt["__build__.OrderedCollections.OrderedDict"] = (od, _meta) -> od
-  return mt
+    # ingore state_dict version number
+    mt["__build__.OrderedCollections.OrderedDict"] = (od, _meta) -> od
+    return mt
 end
 
 function TorchPickler(proto=DEFAULT_PROTO, memo=Dict())
@@ -55,15 +55,25 @@ protocol(::TorchPickler{P}) where {P} = P
 isbinary(pklr::TorchPickler) = protocol(pklr) >= 1
 
 """
-  THload(file::AbstractString; mmap = false)
+      THload(file::AbstractString; mmap = false, lazy = false)
 
-load data that saved by `torch.save`. `torch.tensor`
-will be load as `Array` or `StridedView`
-dependent on the memory layout of that tensor.
+Load data that saved by `torch.save`. `torch.tensor` will be load as `Array` or `StridedView`
+ dependent on the memory layout of that tensor. `mmap` must be set if `lazy` is set. With `lazy = true`,
+ each `torch.tensor` will be a lazy object and calling that object (`loaded_lazy_tensor()`) perform the
+ actualy load and store the result in that object so subsequent call return the same result.
 """
-THload(file::AbstractString; mmap = false) = open(file) do f
-    io = mmap ? IOBuffer(Mmap.mmap(f, Vector{UInt8})) : f
-    return THload(TorchPickler(), io)
+function THload(file::AbstractString; mmap = false, lazy = false)
+    @assert !lazy || mmap "lazy torch loader require mmap=true"
+    open(file) do f
+        io = mmap ? IOBuffer(Mmap.mmap(f, Vector{UInt8})) : f
+        p = TorchPickler()
+        if lazy
+            mt = p.mt
+            st = p.storage
+            mt["torch._utils._rebuild_tensor_v2"] = (arg...) -> build_tensor(st, true, arg...)
+        end
+        return THload(p, io)
+    end
 end
 
 function THload(tp::TorchPickler, io)
@@ -110,46 +120,80 @@ function legacy_load(tp::TorchPickler, io)
     return typeinfo
 end
 
-function build_tensor(sm::StorageManager, fake_storage, offset, tsize, tstride, grad, _)
-  @assert length(tsize) == length(tstride)
-  @assert fake_storage.head == :persistent_load
-  header, thtype, key, device, numel, = fake_storage.args[1]
-  @assert header == "storage"
-  dtype = thtype2dtype(thtype)
-  jltype = dtype2jltype(dtype)
-  tlength = prod(tsize)
+function build_tensor(sm::StorageManager, lazy, fake_storage, offset, tsize, tstride, grad, _)
+    @assert length(tsize) == length(tstride)
+    @assert fake_storage.head == :persistent_load
+    header, thtype, key, device, numel, = fake_storage.args[1]
+    @assert header == "storage"
+    dtype = thtype2dtype(thtype)
+    jltype = dtype2jltype(dtype)
+    tlength = prod(tsize)
 
-  if haskey(sm, key)
-    storage = sm[key][end]
-  else
-    storage = Array{jltype}(undef, numel)
-    setindex!(sm, (dtype, numel, device, storage), key)
-  end
+    if haskey(sm, key)
+        storage = sm[key][end]
+    else
+        storage = lazy ? LazyLoadedStorage{jltype}(numel) : Array{jltype}(undef, numel)
+        setindex!(sm, (dtype, numel, device, storage), key)
+    end
 
-  if (tlength == numel) && (isone(length(tsize)) || isempty(tsize) || isone(first(tstride)))
-    tensor = reshape(storage, tsize) # f-contiguous
-  else # otherwise use strided
-    tensor = StridedView(storage, tsize, tstride, offset)
-  end
+    if (tlength == numel) && (isone(length(tsize)) || isempty(tsize) || isone(first(tstride)))
+        if lazy
+            tensor = LazyLoadedWrapper(storage, tsize, x->Base.ReshapedArray(x, tsize, ()))
+        else
+            tensor = Base.ReshapedArray(storage, tsize, ()) # f-contiguous
+        end
+    else # otherwise use strided
+        if lazy
+            tensor = LazyLoadedWrapper(storage, tsize, x->StridedView(x, tsize, tstride, offset))
+        else
+            tensor = StridedView(storage, tsize, tstride, offset)
+        end
+    end
 
-  return tensor
+    return tensor
 end
 
 function load_tensor!(io::IO, sm::StorageManager, tensor_key)
-  for key in tensor_key
-    type, numel, device, storage = sm[key]
-    tsize = read(io, Int64)
-    @assert tsize == numel
-    tdata = read(io, tsize * bytewidth(type))
-    storage .= reinterpret(dtype2jltype(type), tdata)
-  end
+    for key in tensor_key
+        type, numel, device, storage = sm[key]
+        tsize = read(io, Int64)
+        @assert tsize == numel
+        nbytes = tsize * bytewidth(type)
+        if storage isa LazyLoadedStorage
+            start = io.ptr
+            tdata = @view io.data[start:start+nbytes-1]
+            storage.loader = dest -> dest .= reinterpret(dtype2jltype(type), tdata)
+            io.ptr += nbytes
+        else
+            @assert storage isa Array && nbytes == sizeof(storage)
+            read!(io, storage)
+        end
+    end
 end
 
 function load_tensor_zip!(zipfile, sm::StorageManager)
-  for (key, values) in pairs(sm)
-    type, numel, device, storage = values
-    zf = get_record(zipfile, "/$key")
-    tdata = read(zf)
-    storage .= reinterpret(dtype2jltype(type), tdata)
-  end
+    for (key, values) in pairs(sm)
+        type, numel, device, storage = values
+        if storage isa LazyLoadedStorage
+            storage.loader = function (dest)
+                zf = get_record(zipfile, "/$key")
+                T = dtype2jltype(type)
+                if dest isa Array{T}
+                    @assert numel == length(dest)
+                    buf = unsafe_wrap(Array, convert(Ptr{T}, pointer(dest)), numel)
+                    GC.@preserve dest read!(zf, buf)
+                else
+                    tdata = read(zf)
+                    dest .= reinterpret(dtype2jltype(type), tdata)
+                end
+                return dest
+            end
+        else
+            zf = get_record(zipfile, "/$key")
+            T = dtype2jltype(type)
+            @assert numel == length(storage)
+            buf = unsafe_wrap(Array, convert(Ptr{T}, pointer(storage)), numel)
+            GC.@preserve storage read!(zf, buf)
+        end
+    end
 end

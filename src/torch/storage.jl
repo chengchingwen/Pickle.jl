@@ -100,8 +100,84 @@ function thtype2dtype(defer)
   end
 end
 
+
+mutable struct LazyLoadedStorage{T} <: AbstractVector{T}
+    len::Int
+    refcnt::Int
+    loader::Any
+    data::Any
+    LazyLoadedStorage{T}(len) where T = new{T}(len, 0)
+end
+islazy(::LazyLoadedStorage) = true
+islazy(x) = false
+isloaded(x::LazyLoadedStorage) = isdefined(x, :data)
+Base.size(x::LazyLoadedStorage) = (length(x),)
+Base.parent(x::LazyLoadedStorage) = x
+Base.length(x::LazyLoadedStorage) = x.len
+function (v::LazyLoadedStorage)(dest = nothing)
+    if isloaded(v)
+        isnothing(dest) && return v.data
+        @assert dest === v.data "Cannot load to required destination because the storage is already loaded"
+        return dest
+    end
+    if isnothing(dest)
+        dest = Array{eltype(v)}(undef, length(v))
+    end
+    v.loader(dest)
+    v.loader = nothing
+    v.data = dest
+    return dest
+end
+function Base.show(io::IO, x::LazyLoadedStorage)
+    print(io, "LazyLoadedStorage{")
+    print(io, eltype(x))
+    print(io, "}(loaded = ")
+    print(io, isloaded(x))
+    print(io, ", len = ")
+    print(io, length(x))
+    print(io, ')')
+end
+Base.show(io::IO, ::MIME"text/plain", x::LazyLoadedStorage) = show(io, x)
+
+mutable struct LazyLoadedWrapper{T, N} <: AbstractArray{T, N}
+    storage::LazyLoadedStorage{T}
+    shape::Dims{N}
+    full::Bool
+    construct::Any
+    data::Any
+    function LazyLoadedWrapper{T, N}(storage::LazyLoadedStorage{T}, shape::Dims{N}, construct) where {T, N}
+        storage.refcnt += 1
+        full = length(storage) == prod(shape)
+        if isloaded(storage)
+            return new{T, N}(storage, shape, full, construct, construct(storage.data))
+        else
+            return new{T, N}(storage, shape, full, construct)
+        end
+    end
+end
+LazyLoadedWrapper(storage, shape, construct) = LazyLoadedWrapper{eltype(storage), length(shape)}(storage, shape, construct)
+islazy(::LazyLoadedWrapper) = true
+isloaded(x::LazyLoadedWrapper) = isdefined(x, :data)
+function (x::LazyLoadedWrapper)(dest = nothing)
+    isloaded(x) && isnothing(dest) && return x.data
+    x.storage(dest)
+    x.data = x.construct(x.storage.data)
+    return x.data
+end
+function Base.show(io::IO, x::LazyLoadedWrapper)
+    print(io, "LazyLoadedWrapper{")
+    print(io, eltype(x))
+    print(io, "}(loaded = ")
+    print(io, isloaded(x))
+    print(io, ", size = ")
+    print(io, x.shape)
+    print(io, ')')
+end
+Base.show(io::IO, ::MIME"text/plain", x::LazyLoadedWrapper) = show(io, x)
+
+
 struct StorageManager
-  data::Dict{String, Tuple{DType, Int, String, Array}}
+  data::Dict{String, Tuple{DType, Int, String, Union{LazyLoadedStorage, Array}}}
 end
 
 StorageManager() = StorageManager(Dict())

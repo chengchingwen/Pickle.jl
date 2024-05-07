@@ -1,7 +1,7 @@
 name = "Pickle"
 uuid = "fbb45041-c46e-462f-888f-7c521cafbc2c"
 authors = ["chengchingwen <adgjl5645@hotmail.com>"]
-version = "0.3.4"
+version = "0.3.5"
 
 [deps]
 BFloat16s = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"

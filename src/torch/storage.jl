@@ -175,9 +175,14 @@ function Base.show(io::IO, x::LazyLoadedWrapper)
 end
 Base.show(io::IO, ::MIME"text/plain", x::LazyLoadedWrapper) = show(io, x)
 
+@static if isdefined(Core, :Memory)
+    const StorageData = Union{LazyLoadedStorage, Array, Memory}
+else
+    const StorageData = Union{LazyLoadedStorage, Array}
+end
 
 struct StorageManager
-  data::Dict{String, Tuple{DType, Int, String, Union{LazyLoadedStorage, Array}}}
+  data::Dict{String, Tuple{DType, Int, String, StorageData}}
 end
 
 StorageManager() = StorageManager(Dict())

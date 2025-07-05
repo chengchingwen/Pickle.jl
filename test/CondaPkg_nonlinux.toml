@@ -1,4 +1,4 @@
 [pip.deps]
-numpy = ""
+numpy = "<2"
 torch = ""
 scipy = ""

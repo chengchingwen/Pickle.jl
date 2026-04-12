@@ -15,10 +15,10 @@ StringEncodings = "69024149-9ee7-55f6-a4c4-859efe599b68"
 ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
 
 [compat]
-BFloat16s = "0.4, 0.5"
+BFloat16s = "0.4 - 0.6"
 DataStructures = "0.18, 0.19"
 InternedStrings = "0.7"
-StridedViews = "0.2, 0.3, 0.4"
+StridedViews = "0.2 - 0.4"
 StringEncodings = "0.3"
-ZipFile = "0.9, 0.10"
+ZipFile = "0.9 - 0.10"
 julia = "1.6"

@@ -125,7 +125,7 @@ Dict{Any,Any} with 9 entries:
 
 ## Pickle.Torch
 
-We also support loading/saving the tensor data from/for pytorch.
+We also support loading/saving the tensor data from/to PyTorch.
 
 ```julia
 julia> Pickle.Torch.THsave("mydata.bin", [randn(3,5), randn(5)])
